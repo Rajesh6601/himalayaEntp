@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supplier Dashboard - Himalaya Enterprises</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <nav class="nav">
+      <a href="../index.html" class="nav-logo">
+        <div class="logo-icon">HE</div>
+        <span>Himalaya Enterprises</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="../index.html">Home</a>
+        <a href="catalog.html">Products</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle">&#9790;</button>
+        <button class="btn-login" id="loginBtn" onclick="Auth.showLoginModal()" style="display:none;">Login</button>
+        <div class="user-menu" id="userMenu" style="display:none;">
+          <div class="avatar" id="userAvatar">U</div>
+          <div class="user-dropdown">
+            <span style="padding:10px 16px;font-weight:600;font-size:0.85rem;display:block;" id="userName">User</span>
+            <a href="supplier.html" id="dashLink">Dashboard</a>
+            <button onclick="Auth.logout()">Logout</button>
+          </div>
+        </div>
+        <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open');this.classList.toggle('active');">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Dashboard -->
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="dash-sidebar" id="dashSidebar">
+      <div class="dash-sidebar-header">
+        <h3>Supplier Panel</h3>
+        <p>Manage products & orders</p>
+      </div>
+      <nav class="dash-nav">
+        <a href="#" class="active" onclick="SupplierDash.showSection('overview',this)">&#128202; Overview</a>
+        <a href="#" onclick="SupplierDash.showSection('products',this)">&#128230; Products</a>
+        <a href="#" onclick="SupplierDash.showSection('orders',this)">&#128203; Orders & Inquiries</a>
+        <a href="#" onclick="SupplierDash.showSection('add-product',this)">&#10010; Add Product</a>
+      </nav>
+    </aside>
+
+    <!-- Content -->
+    <main class="dash-content">
+      <button class="btn btn-ghost btn-sm dash-toggle" onclick="App.toggleDashSidebar()" style="margin-bottom:16px;">&#9776; Menu</button>
+
+      <!-- Overview Section -->
+      <div id="section-overview" class="dash-section">
+        <div class="dash-header">
+          <h2>Dashboard Overview</h2>
+        </div>
+        <div class="stats-grid" id="supplierStats">
+          <!-- Rendered by JS -->
+        </div>
+        <h3 style="margin-bottom:16px;">Recent Orders</h3>
+        <div id="recentOrders">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Products Section -->
+      <div id="section-products" class="dash-section" style="display:none;">
+        <div class="dash-header">
+          <h2>Manage Products</h2>
+          <button class="btn btn-primary btn-sm" onclick="SupplierDash.showSection('add-product')">&#10010; Add Product</button>
+        </div>
+        <div id="productsList">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Orders Section -->
+      <div id="section-orders" class="dash-section" style="display:none;">
+        <div class="dash-header">
+          <h2>Orders & Inquiries</h2>
+        </div>
+        <div id="allOrders">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Add Product Section -->
+      <div id="section-add-product" class="dash-section" style="display:none;">
+        <div class="dash-header">
+          <h2 id="productFormTitle">Add New Product</h2>
+        </div>
+        <div style="max-width:600px;">
+          <form id="productForm" onsubmit="SupplierDash.handleProductForm(event)">
+            <input type="hidden" id="editProductId" value="">
+            <div class="form-group">
+              <label for="prodName">Product Name *</label>
+              <input type="text" id="prodName" placeholder="e.g. 10-Wheeler Tipper Body" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="prodCategory">Category *</label>
+                <select id="prodCategory" required>
+                  <option value="tippers">Tippers</option>
+                  <option value="trailers">Trailers</option>
+                  <option value="tractors">Tractor Bodies</option>
+                  <option value="water-tanks">Water Tanks</option>
+                  <option value="custom">Custom Fabrication</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="prodStatus">Status</label>
+                <select id="prodStatus">
+                  <option value="available">Available</option>
+                  <option value="production">In Production</option>
+                  <option value="order">Made to Order</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="prodSpecs">Specifications *</label>
+              <input type="text" id="prodSpecs" placeholder="Capacity, material, features..." required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="prodPrice">Price Min (&#8377;) *</label>
+                <input type="number" id="prodPrice" placeholder="e.g. 200000" required min="0">
+              </div>
+              <div class="form-group">
+                <label for="prodPriceMax">Price Max (&#8377;) *</label>
+                <input type="number" id="prodPriceMax" placeholder="e.g. 350000" required min="0">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="prodStock">Stock Quantity</label>
+                <input type="number" id="prodStock" placeholder="0" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="prodIcon">Icon</label>
+                <select id="prodIcon">
+                  <option value="🚛">🚛 Truck</option>
+                  <option value="🚚">🚚 Trailer</option>
+                  <option value="🚜">🚜 Tractor</option>
+                  <option value="💧">💧 Water</option>
+                  <option value="🔧">🔧 Custom</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="prodDesc">Description</label>
+              <textarea id="prodDesc" placeholder="Detailed product description..." rows="4"></textarea>
+            </div>
+            <div style="display:flex;gap:12px;">
+              <button type="submit" class="btn btn-primary">Save Product</button>
+              <button type="button" class="btn btn-ghost" onclick="SupplierDash.resetForm();SupplierDash.showSection('products')">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Stock Update Modal -->
+  <div class="modal-overlay" id="stockModal">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-header">
+        <h3>Update Stock</h3>
+        <button class="modal-close" onclick="App.closeModal('stockModal')">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="stockProductName">Product</label>
+          <input type="text" id="stockProductName" disabled>
+        </div>
+        <div class="form-group">
+          <label for="newStockQty">New Stock Quantity</label>
+          <input type="number" id="newStockQty" min="0" value="0">
+        </div>
+        <input type="hidden" id="stockProductId">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="App.closeModal('stockModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="SupplierDash.updateStock()">Update Stock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Modal (fallback) -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Supplier Login</h3>
+        <button class="modal-close" onclick="App.closeModal('loginModal')">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <form class="login-form" id="loginForm" onsubmit="Auth.handleLogin(event)">
+          <div class="form-group"><label for="loginEmail">Email</label><input type="email" id="loginEmail" required></div>
+          <div class="form-group"><label for="loginPassword">Password</label><input type="password" id="loginPassword" required></div>
+          <button type="submit" class="btn btn-primary btn-block">Login</button>
+          <p class="mt-2 text-center" style="font-size:0.8rem;color:var(--text-muted);">Demo: admin@himalayaentp.com / admin123</p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/app.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/catalog.js"></script>
+  <script src="../js/cart.js"></script>
+  <script>
+    const SupplierDash = {
+      async init() {
+        if (!Auth.requireAuth('supplier')) return;
+        await this.renderOverview();
+        await this.renderProducts();
+        await this.renderOrders();
+      },
+
+      showSection(name, el) {
+        document.querySelectorAll('.dash-section').forEach(s => s.style.display = 'none');
+        const section = document.getElementById('section-' + name);
+        if (section) section.style.display = 'block';
+        if (el) {
+          document.querySelectorAll('.dash-nav a').forEach(a => a.classList.remove('active'));
+          el.classList.add('active');
+        }
+        document.querySelector('.dash-sidebar')?.classList.remove('open');
+      },
+
+      async renderOverview() {
+        let products, orders;
+        try { products = (await Catalog.fetchProducts()) || Catalog.getProducts(); } catch { products = Catalog.getProducts(); }
+        try { orders = (await Cart.fetchOrders()) || Cart.getOrders(); } catch { orders = Cart.getOrders(); }
+        const pending = orders.filter(o => o.status === 'pending').length;
+        const totalRevenue = orders.filter(o => o.status === 'completed')
+          .reduce((sum, o) => sum + o.items.reduce((s, i) => s + (i.price || 0), 0), 0);
+
+        document.getElementById('supplierStats').innerHTML = `
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(9,132,227,0.1);color:var(--blue);">&#128230;</div>
+            <h3>${products.length}</h3>
+            <p>Total Products</p>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(253,203,110,0.2);color:#e67e22;">&#128203;</div>
+            <h3>${pending}</h3>
+            <p>Pending Orders</p>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(0,184,148,0.1);color:var(--green);">&#128176;</div>
+            <h3>${App.formatCurrency(totalRevenue)}</h3>
+            <p>Revenue (Completed)</p>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(212,56,13,0.1);color:var(--primary);">&#128200;</div>
+            <h3>${orders.length}</h3>
+            <p>Total Inquiries</p>
+          </div>
+        `;
+
+        const recent = orders.slice(-5).reverse();
+        document.getElementById('recentOrders').innerHTML = recent.length === 0
+          ? '<div class="empty-state"><div class="empty-icon">&#128203;</div><h3>No orders yet</h3><p>Orders and inquiries will appear here.</p></div>'
+          : `<table class="data-table">
+              <thead><tr><th>Order ID</th><th>Buyer</th><th>Type</th><th>Items</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody>${recent.map(o => `
+                <tr>
+                  <td><strong>${o.id}</strong></td>
+                  <td>${o.buyerName}</td>
+                  <td>${o.type === 'rfq' ? '<span class="badge badge-blue">RFQ</span>' : '<span class="badge badge-green">Inquiry</span>'}</td>
+                  <td>${o.items.length} item(s)</td>
+                  <td>${Cart.getStatusLabel(o.status)}</td>
+                  <td>${new Date(o.createdAt).toLocaleDateString()}</td>
+                </tr>
+              `).join('')}</tbody>
+            </table>`;
+      },
+
+      async renderProducts() {
+        let products;
+        try { products = (await Catalog.fetchProducts()) || Catalog.getProducts(); } catch { products = Catalog.getProducts(); }
+        // Cache locally for edit/stock modals
+        this._products = products;
+        document.getElementById('productsList').innerHTML = products.length === 0
+          ? '<div class="empty-state"><div class="empty-icon">&#128230;</div><h3>No products</h3><p>Add your first product.</p></div>'
+          : `<table class="data-table">
+              <thead><tr><th>Product</th><th>Category</th><th>Price Range</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>${products.map(p => `
+                <tr>
+                  <td><strong>${p.icon} ${p.name}</strong></td>
+                  <td>${Catalog.getCategoryLabel(p.category)}</td>
+                  <td>${App.formatCurrency(p.price)} - ${App.formatCurrency(p.priceMax)}</td>
+                  <td>${p.stock}</td>
+                  <td>${Catalog.getStockBadge(p)}</td>
+                  <td style="display:flex;gap:6px;">
+                    <button class="btn btn-ghost btn-sm" onclick="SupplierDash.editProduct('${p.id}')">Edit</button>
+                    <button class="btn btn-ghost btn-sm" onclick="SupplierDash.openStockModal('${p.id}')">Stock</button>
+                    <button class="btn btn-danger btn-sm" onclick="SupplierDash.deleteProduct('${p.id}')">Delete</button>
+                  </td>
+                </tr>
+              `).join('')}</tbody>
+            </table>`;
+      },
+
+      async renderOrders() {
+        let orders;
+        try { orders = (await Cart.fetchOrders()) || Cart.getOrders(); } catch { orders = Cart.getOrders(); }
+        document.getElementById('allOrders').innerHTML = orders.length === 0
+          ? '<div class="empty-state"><div class="empty-icon">&#128203;</div><h3>No orders</h3><p>Customer inquiries and orders will appear here.</p></div>'
+          : `<table class="data-table">
+              <thead><tr><th>Order ID</th><th>Buyer</th><th>Email</th><th>Type</th><th>Items</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+              <tbody>${orders.map(o => `
+                <tr>
+                  <td><strong>${o.id}</strong></td>
+                  <td>${o.buyerName}</td>
+                  <td>${o.buyerEmail}</td>
+                  <td>${o.type === 'rfq' ? 'RFQ' : 'Inquiry'}</td>
+                  <td>${o.items.map(i => i.name).join(', ')}</td>
+                  <td>${Cart.getStatusLabel(o.status)}</td>
+                  <td>${new Date(o.createdAt).toLocaleDateString()}</td>
+                  <td>
+                    <select onchange="SupplierDash.changeOrderStatus('${o.id}', this.value)" style="padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);font-size:0.8rem;">
+                      <option value="pending" ${o.status==='pending'?'selected':''}>Pending</option>
+                      <option value="confirmed" ${o.status==='confirmed'?'selected':''}>Confirmed</option>
+                      <option value="in-progress" ${o.status==='in-progress'?'selected':''}>In Progress</option>
+                      <option value="completed" ${o.status==='completed'?'selected':''}>Completed</option>
+                      <option value="cancelled" ${o.status==='cancelled'?'selected':''}>Cancelled</option>
+                    </select>
+                  </td>
+                </tr>
+              `).join('')}</tbody>
+            </table>`;
+      },
+
+      async handleProductForm(e) {
+        e.preventDefault();
+        const editId = document.getElementById('editProductId').value;
+        const data = {
+          name: document.getElementById('prodName').value.trim(),
+          category: document.getElementById('prodCategory').value,
+          specs: document.getElementById('prodSpecs').value.trim(),
+          price: parseInt(document.getElementById('prodPrice').value),
+          priceMax: parseInt(document.getElementById('prodPriceMax').value),
+          stock: parseInt(document.getElementById('prodStock').value) || 0,
+          status: document.getElementById('prodStatus').value,
+          icon: document.getElementById('prodIcon').value,
+          description: document.getElementById('prodDesc').value.trim()
+        };
+
+        if (editId) {
+          await Catalog.updateProduct(editId, data);
+          App.showToast('Product updated successfully!', 'success');
+        } else {
+          await Catalog.addProduct(data);
+          App.showToast('Product added successfully!', 'success');
+        }
+
+        this.resetForm();
+        await this.renderProducts();
+        await this.renderOverview();
+        this.showSection('products');
+      },
+
+      editProduct(id) {
+        const p = (this._products || []).find(x => x.id === id) || Catalog.getProduct(id);
+        if (!p) return;
+        document.getElementById('editProductId').value = p.id;
+        document.getElementById('prodName').value = p.name;
+        document.getElementById('prodCategory').value = p.category;
+        document.getElementById('prodSpecs').value = p.specs;
+        document.getElementById('prodPrice').value = p.price;
+        document.getElementById('prodPriceMax').value = p.priceMax;
+        document.getElementById('prodStock').value = p.stock;
+        document.getElementById('prodStatus').value = p.status;
+        document.getElementById('prodIcon').value = p.icon || '🚛';
+        document.getElementById('prodDesc').value = p.description || '';
+        document.getElementById('productFormTitle').textContent = 'Edit Product';
+        this.showSection('add-product');
+      },
+
+      async deleteProduct(id) {
+        if (!confirm('Are you sure you want to delete this product?')) return;
+        await Catalog.deleteProduct(id);
+        App.showToast('Product deleted.', 'info');
+        await this.renderProducts();
+        await this.renderOverview();
+      },
+
+      openStockModal(id) {
+        const p = (this._products || []).find(x => x.id === id) || Catalog.getProduct(id);
+        if (!p) return;
+        document.getElementById('stockProductId').value = id;
+        document.getElementById('stockProductName').value = p.name;
+        document.getElementById('newStockQty').value = p.stock;
+        App.openModal('stockModal');
+      },
+
+      async updateStock() {
+        const id = document.getElementById('stockProductId').value;
+        const qty = parseInt(document.getElementById('newStockQty').value) || 0;
+        await Catalog.updateStock(id, qty);
+        App.closeModal('stockModal');
+        App.showToast('Stock updated successfully!', 'success');
+        await this.renderProducts();
+        await this.renderOverview();
+      },
+
+      async changeOrderStatus(orderId, status) {
+        await Cart.updateOrderStatus(orderId, status);
+        App.showToast(`Order ${orderId} status updated to ${status}.`, 'success');
+        await this.renderOrders();
+        await this.renderOverview();
+      },
+
+      resetForm() {
+        document.getElementById('productForm').reset();
+        document.getElementById('editProductId').value = '';
+        document.getElementById('productFormTitle').textContent = 'Add New Product';
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => SupplierDash.init());
+  </script>
+</body>
+</html>

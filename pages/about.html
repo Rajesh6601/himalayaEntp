@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Us - Himalaya Enterprises</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <nav class="nav">
+      <a href="../index.html" class="nav-logo">
+        <div class="logo-icon">HE</div>
+        <span>Himalaya Enterprises</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="../index.html">Home</a>
+        <a href="catalog.html">Products</a>
+        <a href="about.html" class="active">About</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle">&#9790;</button>
+        <button class="btn btn-icon btn-ghost" id="cartBtn" onclick="Cart.openCart()" style="display:none;position:relative;">
+          &#128722;<span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+        </button>
+        <button class="btn-login" id="loginBtn" onclick="Auth.showLoginModal()">Login</button>
+        <div class="user-menu" id="userMenu" style="display:none;">
+          <div class="avatar" id="userAvatar">U</div>
+          <div class="user-dropdown">
+            <span style="padding:10px 16px;font-weight:600;font-size:0.85rem;display:block;" id="userName">User</span>
+            <a href="#" id="dashLink">Dashboard</a>
+            <button onclick="Auth.logout()">Logout</button>
+          </div>
+        </div>
+        <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open');this.classList.toggle('active');">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ===== About Hero (Full-bleed) ===== -->
+  <section class="hero-fullbleed" style="min-height:60vh;">
+    <div class="hero-bg">
+      <img src="../assets/tipper-1.jpg" alt="Himalaya Enterprises Fleet" loading="eager">
+    </div>
+    <div class="hero-overlay"></div>
+    <div class="container hero-inner" style="max-width:800px;">
+      <div class="hero-badge animate-on-scroll">Est. 2009 &bull; Jamshedpur, India</div>
+      <h1 class="hero-title animate-on-scroll" style="font-size:3rem;">
+        Engineering <span>Excellence</span> in Automobile Body Manufacturing
+      </h1>
+      <p class="hero-subtitle animate-on-scroll">
+        Over 15 years of building India's toughest tippers, trailers, and custom vehicle bodies from the heart of Jamshedpur's industrial hub.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===== Company Story ===== -->
+  <section class="section">
+    <div class="container">
+      <div class="about-story-grid">
+        <div class="about-story-text animate-on-scroll">
+          <span class="section-label">Our Story</span>
+          <h2>From a Small Workshop to 15,000 sq.ft. Manufacturing Powerhouse</h2>
+          <p>Founded in Jamshedpur, the steel city of India, Himalaya Enterprises has been at the forefront of automobile body manufacturing for over 15 years. What started as a 3-person workshop in Adityapur has grown into one of Eastern India's most respected fabrication companies.</p>
+          <p>We combine traditional craftsmanship with modern CNC-driven engineering to deliver products that exceed expectations. Our state-of-the-art facility houses cutting-edge equipment for precision cutting, bending, welding, and finishing. Every product goes through a rigorous 12-point quality check before delivery.</p>
+          <p>Today, we serve fleet owners, transporters, mining companies, and municipal bodies across Jharkhand, Bihar, Odisha, and West Bengal.</p>
+        </div>
+        <div class="about-story-images animate-on-scroll">
+          <img src="../assets/tipper.jpg" alt="Himalaya Tipper Manufacturing" class="about-img-main">
+          <img src="../assets/flat-bed-trailor.jpg" alt="Flatbed Trailer" class="about-img-secondary">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Stats Bar ===== -->
+  <section class="stats-section">
+    <div class="container">
+      <div class="stats-counter-grid">
+        <div class="counter-card animate-on-scroll">
+          <div class="counter-number" data-target="15">0</div>
+          <span class="counter-suffix">+</span>
+          <p>Years of Excellence</p>
+        </div>
+        <div class="counter-card animate-on-scroll">
+          <div class="counter-number" data-target="10000">0</div>
+          <span class="counter-suffix">+</span>
+          <p>Vehicles Built</p>
+        </div>
+        <div class="counter-card animate-on-scroll">
+          <div class="counter-number" data-target="500">0</div>
+          <span class="counter-suffix">+</span>
+          <p>Happy Clients</p>
+        </div>
+        <div class="counter-card animate-on-scroll">
+          <div class="counter-number" data-target="15000">0</div>
+          <span class="counter-suffix">sq.ft</span>
+          <p>Manufacturing Facility</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Mission & Values ===== -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-header animate-on-scroll">
+        <span class="section-label">Our Mission</span>
+        <h2>Driving India's Transport Infrastructure Forward</h2>
+        <p>We believe in building bodies that work as hard as the people who drive them.</p>
+      </div>
+      <div class="features-grid-v2">
+        <div class="feature-card-v2 animate-on-scroll">
+          <div class="feature-icon-v2" style="background:rgba(212,56,13,0.1);color:var(--primary);">&#127919;</div>
+          <div class="feature-body">
+            <h3>Our Mission</h3>
+            <p>To be India's most trusted automobile body manufacturer by delivering uncompromising quality, innovation, and customer satisfaction in every product.</p>
+          </div>
+        </div>
+        <div class="feature-card-v2 animate-on-scroll">
+          <div class="feature-icon-v2" style="background:rgba(9,132,227,0.12);color:var(--blue);">&#128065;</div>
+          <div class="feature-body">
+            <h3>Our Vision</h3>
+            <p>To expand our manufacturing capabilities across Eastern India while maintaining the personalized service and quality that defines Himalaya Enterprises.</p>
+          </div>
+        </div>
+        <div class="feature-card-v2 animate-on-scroll">
+          <div class="feature-icon-v2" style="background:rgba(0,184,148,0.12);color:var(--green);">&#128147;</div>
+          <div class="feature-body">
+            <h3>Our Values</h3>
+            <p>Integrity in every weld, transparency in every quote, and dedication to every client. We treat your vehicle as if it were our own.</p>
+          </div>
+        </div>
+        <div class="feature-card-v2 animate-on-scroll">
+          <div class="feature-icon-v2" style="background:rgba(253,203,110,0.2);color:#e67e22;">&#128161;</div>
+          <div class="feature-body">
+            <h3>Our Promise</h3>
+            <p>Factory-direct pricing, on-time delivery, and full after-sales support with warranty coverage on every product that leaves our facility.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CEO Section ===== -->
+  <section class="section" id="ceo">
+    <div class="container">
+      <div class="section-header animate-on-scroll">
+        <span class="section-label">Leadership</span>
+        <h2>Meet Our CEO</h2>
+      </div>
+      <div class="ceo-card-v2 animate-on-scroll">
+        <div class="ceo-left-col">
+          <div class="ceo-photo-v2">
+            <img src="../assets/rajeev_shukla.jpeg" alt="Rajeev Shukla - CEO & Founder, Himalaya Enterprises">
+          </div>
+          <div class="ceo-sidebar-info">
+            <h3>Rajeev Shukla</h3>
+            <p class="ceo-title" style="margin-bottom:20px;">CEO & Founder</p>
+            <div class="ceo-sidebar-stats">
+              <div class="ceo-sidebar-stat">
+                <strong>20+</strong>
+                <span>Years in Industry</span>
+              </div>
+              <div class="ceo-sidebar-stat">
+                <strong>10K+</strong>
+                <span>Vehicles Delivered</span>
+              </div>
+              <div class="ceo-sidebar-stat">
+                <strong>2009</strong>
+                <span>Founded Company</span>
+              </div>
+            </div>
+            <div class="ceo-sidebar-contact">
+              <p>&#128205; Jamshedpur, Jharkhand</p>
+              <p>&#128218; B.E. Mechanical Engineering</p>
+              <p>&#127942; Jamshedpur Industrial Association</p>
+            </div>
+          </div>
+        </div>
+        <div class="ceo-info">
+          <h2>About Rajeev Shukla</h2>
+          <p class="ceo-title">Chief Executive Officer & Founder</p>
+          <p>Rajeev Shukla is the visionary behind Himalaya Enterprises. Born and raised in Jamshedpur, he understood the industrial heartbeat of the steel city from a young age. After completing his engineering degree, Rajeev spent several years working in the automobile manufacturing sector before founding Himalaya Enterprises in 2009.</p>
+          <p>With over two decades of experience, Rajeev has built the company from a small workshop into one of the most respected names in tipper, trailer, and custom fabrication in Eastern India. Under his leadership, the company has manufactured over 500 vehicle bodies and served 200+ clients across Jharkhand, Bihar, Odisha, and West Bengal.</p>
+
+          <div class="ceo-vision">
+            <h4>Rajeev's Vision</h4>
+            <p style="margin:0">"My goal has always been simple: build the strongest, most reliable automobile bodies in India. Every tipper, every trailer, every tank that leaves our facility carries our name and our reputation. I want every client to feel that they made the best investment of their career when they chose Himalaya Enterprises."</p>
+          </div>
+
+          <div class="ceo-achievements">
+            <h4>Key Achievements</h4>
+            <div class="ceo-achieve-grid">
+              <div class="ceo-achieve-item">
+                <span>&#128188;</span>
+                <p>Founded Himalaya Enterprises in 2009 with a 3-person team</p>
+              </div>
+              <div class="ceo-achieve-item">
+                <span>&#127981;</span>
+                <p>Expanded to 15,000 sq.ft. facility in Adityapur Industrial Area</p>
+              </div>
+              <div class="ceo-achieve-item">
+                <span>&#129309;</span>
+                <p>Built partnerships with major fleet operators across Eastern India</p>
+              </div>
+              <div class="ceo-achieve-item">
+                <span>&#9878;</span>
+                <p>Introduced Hardox steel fabrication to the Jamshedpur region</p>
+              </div>
+              <div class="ceo-achieve-item">
+                <span>&#127942;</span>
+                <p>Active member of Jamshedpur Industrial Association</p>
+              </div>
+              <div class="ceo-achieve-item">
+                <span>&#127891;</span>
+                <p>Mentors young entrepreneurs in the manufacturing sector</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Product Gallery Strip ===== -->
+  <section class="gallery-strip">
+    <div class="gallery-scroll">
+      <img src="../assets/tipper.jpg" alt="Tipper" loading="lazy">
+      <img src="../assets/flat-bed-trailor.jpg" alt="Trailer" loading="lazy">
+      <img src="../assets/tip-trailor.jpg" alt="Tip Trailer" loading="lazy">
+      <img src="../assets/tractor-trolley.jpg" alt="Tractor Trolley" loading="lazy">
+      <img src="../assets/tip-trailor-34cum.jpg" alt="34 Cum Tip Trailer" loading="lazy">
+      <img src="../assets/container-bodies.jpg" alt="Container Bodies" loading="lazy">
+      <img src="../assets/tip-trailor-2.jpg" alt="Tip Trailers" loading="lazy">
+      <img src="../assets/tipper-1.jpg" alt="Tipper Fleet" loading="lazy">
+      <img src="../assets/tipper.jpg" alt="Tipper" loading="lazy">
+      <img src="../assets/flat-bed-trailor.jpg" alt="Trailer" loading="lazy">
+      <img src="../assets/tip-trailor.jpg" alt="Tip Trailer" loading="lazy">
+      <img src="../assets/tractor-trolley.jpg" alt="Tractor Trolley" loading="lazy">
+    </div>
+  </section>
+
+  <!-- ===== Manufacturing Capabilities ===== -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-header animate-on-scroll">
+        <span class="section-label">Capabilities</span>
+        <h2>Manufacturing Infrastructure</h2>
+        <p>Our facility is equipped to handle any automobile body manufacturing challenge.</p>
+      </div>
+      <div class="capabilities-grid">
+        <div class="capability-card animate-on-scroll">
+          <div class="cap-icon">&#9881;</div>
+          <h3>CNC Cutting</h3>
+          <p>Precision plasma and oxy-fuel cutting for accurate steel plate processing.</p>
+        </div>
+        <div class="capability-card animate-on-scroll">
+          <div class="cap-icon">&#128296;</div>
+          <h3>Hydraulic Press Brake</h3>
+          <p>Heavy-duty bending up to 12mm thick steel plates for body forming.</p>
+        </div>
+        <div class="capability-card animate-on-scroll">
+          <div class="cap-icon">&#9889;</div>
+          <h3>MIG/TIG Welding</h3>
+          <p>Certified welders using advanced MIG and TIG welding for structural integrity.</p>
+        </div>
+        <div class="capability-card animate-on-scroll">
+          <div class="cap-icon">&#127912;</div>
+          <h3>Paint & Finishing</h3>
+          <p>Industrial paint booth with primer, anti-rust treatment, and topcoat finishing.</p>
+        </div>
+        <div class="capability-card animate-on-scroll">
+          <div class="cap-icon">&#128207;</div>
+          <h3>Quality Testing</h3>
+          <p>Load testing, dimensional checks, and weld inspection for every unit.</p>
+        </div>
+        <div class="capability-card animate-on-scroll">
+          <div class="cap-icon">&#128666;</div>
+          <h3>Assembly & Fitment</h3>
+          <p>Complete body mounting on chassis with hydraulic system installation.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Certifications ===== -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header animate-on-scroll">
+        <span class="section-label">Quality</span>
+        <h2>Certifications & Standards</h2>
+      </div>
+      <div class="cert-grid">
+        <div class="cert-card animate-on-scroll">
+          <div class="cert-icon">&#9878;</div>
+          <h3>ISO 9001:2015</h3>
+          <p>Quality management system certification for consistent manufacturing standards.</p>
+        </div>
+        <div class="cert-card animate-on-scroll">
+          <div class="cert-icon">&#128737;</div>
+          <h3>ARAI Compliant</h3>
+          <p>All vehicle bodies comply with Automotive Research Association of India guidelines.</p>
+        </div>
+        <div class="cert-card animate-on-scroll">
+          <div class="cert-icon">&#9989;</div>
+          <h3>RTO Approved</h3>
+          <p>Complete RTO documentation and fitness certification support for all products.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="cta-section-v2">
+    <div class="cta-bg">
+      <img src="../assets/tip-trailor-34cum.jpg" alt="Himalaya Enterprises" loading="lazy">
+    </div>
+    <div class="cta-overlay"></div>
+    <div class="container cta-inner">
+      <h2 class="animate-on-scroll">Let's Build Something Great Together</h2>
+      <p class="animate-on-scroll">Contact us today for a free consultation and quotation on your next vehicle body project.</p>
+      <div class="cta-btns animate-on-scroll">
+        <a href="contact.html" class="btn btn-primary btn-lg">Get Free Quote</a>
+        <a href="catalog.html" class="btn btn-outline-white btn-lg">Browse Products</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>Himalaya Enterprises</h3>
+          <p>Jamshedpur's trusted automobile body manufacturing company. Building tippers, trailers, tractor bodies, water tanks, and custom fabrication solutions since 2009.</p>
+          <div class="footer-social">
+            <a href="#">f</a><a href="#">in</a><a href="#">Li</a><a href="#">YT</a>
+          </div>
+        </div>
+        <div>
+          <h4>Products</h4>
+          <ul>
+            <li><a href="catalog.html">Tippers</a></li>
+            <li><a href="catalog.html">Trailers</a></li>
+            <li><a href="catalog.html">Tractor Bodies</a></li>
+            <li><a href="catalog.html">Water Tanks</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Company</h4>
+          <ul>
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="about.html#ceo">Our CEO</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <ul>
+            <li>Industrial Area, Adityapur</li>
+            <li>Jamshedpur, Jharkhand 831013</li>
+            <li>+91 98765 43210</li>
+            <li>info@himalayaentp.com</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">&copy; 2024 Himalaya Enterprises. All rights reserved. | CEO: Rajeev Shukla</div>
+    </div>
+  </footer>
+
+  <a href="https://wa.me/919876543210" target="_blank" class="fab-whatsapp">&#128172;</a>
+  <button class="back-to-top">&#8593;</button>
+
+  <!-- Login Modal -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Welcome to Himalaya Enterprises</h3>
+        <button class="modal-close" onclick="App.closeModal('loginModal')">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <div class="login-tabs">
+          <button class="login-tab active" data-tab="login" onclick="Auth.switchLoginTab('login')">Login</button>
+          <button class="login-tab" data-tab="register" onclick="Auth.switchLoginTab('register')">Register</button>
+        </div>
+        <form class="login-form" id="loginForm" onsubmit="Auth.handleLogin(event)">
+          <div class="form-group"><label for="loginEmail">Email</label><input type="email" id="loginEmail" required></div>
+          <div class="form-group"><label for="loginPassword">Password</label><input type="password" id="loginPassword" required></div>
+          <button type="submit" class="btn btn-primary btn-block">Login</button>
+          <p class="mt-2 text-center" style="font-size:0.8rem;color:var(--text-muted);">Demo: admin@himalayaentp.com / admin123</p>
+        </form>
+        <form class="login-form" id="registerForm" style="display:none" onsubmit="Auth.handleRegister(event)">
+          <div class="form-group"><label for="regName">Full Name</label><input type="text" id="regName" required></div>
+          <div class="form-group"><label for="regEmail">Email</label><input type="email" id="regEmail" required></div>
+          <div class="form-group"><label for="regPassword">Password</label><input type="password" id="regPassword" required minlength="6"></div>
+          <div class="form-group"><label for="regRole">I am a</label><select id="regRole"><option value="buyer">Buyer</option><option value="supplier">Supplier</option></select></div>
+          <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="cart-overlay" onclick="Cart.closeCart()"></div>
+  <div class="cart-sidebar">
+    <div class="cart-header"><h3>&#128722; Inquiry Basket</h3><button class="modal-close" onclick="Cart.closeCart()">&#10005;</button></div>
+    <div class="cart-items"></div>
+    <div class="cart-footer">
+      <button class="btn btn-primary btn-block" onclick="Cart.submitInquiry()">Submit Inquiry</button>
+    </div>
+  </div>
+
+  <script src="../js/app.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/catalog.js"></script>
+  <script src="../js/cart.js"></script>
+</body>
+</html>

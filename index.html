@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Himalaya Enterprises - Automobile Body Manufacturing | Jamshedpur</title>
+  <meta name="description" content="Himalaya Enterprises - Leading automobile body manufacturer in Jamshedpur. Tippers, trailers, tractor bodies, water tanks & custom fabrication.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ===== Header ===== -->
+  <header class="header" id="header">
+    <nav class="nav">
+      <a href="index.html" class="nav-logo">
+        <div class="logo-icon">HE</div>
+        <span>Himalaya Enterprises</span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="index.html" class="active">Home</a>
+        <a href="pages/catalog.html">Products</a>
+        <a href="pages/about.html">About</a>
+        <a href="pages/contact.html">Contact</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">&#9790;</button>
+
+        <!-- Cart Button (Buyer only) -->
+        <button class="btn btn-icon btn-ghost" id="cartBtn" onclick="Cart.openCart()" style="display:none;position:relative;" title="Inquiry Basket">
+          &#128722;
+          <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+        </button>
+
+        <button class="btn-login" id="loginBtn" onclick="Auth.showLoginModal()">Login</button>
+
+        <div class="user-menu" id="userMenu" style="display:none;">
+          <div class="avatar" id="userAvatar">U</div>
+          <div class="user-dropdown">
+            <span style="padding:10px 16px;font-weight:600;font-size:0.85rem;display:block;" id="userName">User</span>
+            <a href="#" id="dashLink">Dashboard</a>
+            <button onclick="Auth.logout()">Logout</button>
+          </div>
+        </div>
+
+        <button class="hamburger" id="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open');this.classList.toggle('active');">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ===== Hero Section (Full-bleed with background image) ===== -->
+  <section class="hero-fullbleed">
+    <div class="hero-bg">
+      <img src="assets/tipper.jpg" alt="Himalaya Enterprises Tipper Trucks" loading="eager">
+    </div>
+    <div class="hero-overlay"></div>
+    <div class="container hero-inner">
+      <div class="hero-badge animate-on-scroll">Since 2009 &bull; Jamshedpur, India</div>
+      <h1 class="hero-title animate-on-scroll">
+        Engineering <span>Strength</span><br>
+        Into Every Vehicle Body
+      </h1>
+      <p class="hero-subtitle animate-on-scroll">
+        India's trusted manufacturer of heavy-duty tippers, trailers, tractor bodies, water tanks &amp; custom fabrication. Built with precision. Built to last.
+      </p>
+      <div class="hero-btns animate-on-scroll">
+        <a href="pages/catalog.html" class="btn btn-primary btn-lg">Explore Products</a>
+        <a href="pages/contact.html" class="btn btn-outline-white btn-lg">Get Free Quote</a>
+      </div>
+      <div class="hero-scroll-hint">
+        <span>Scroll to explore</span>
+        <div class="scroll-arrow"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Trusted By Bar ===== -->
+  <section class="trust-bar">
+    <div class="container">
+      <div class="trust-items">
+        <div class="trust-item"><span>&#9878;</span> ISO 9001:2015</div>
+        <div class="trust-divider"></div>
+        <div class="trust-item"><span>&#9881;</span> ARAI Compliant</div>
+        <div class="trust-divider"></div>
+        <div class="trust-item"><span>&#128203;</span> RTO Approved</div>
+        <div class="trust-divider"></div>
+        <div class="trust-item"><span>&#128295;</span> 500+ Vehicles</div>
+        <div class="trust-divider"></div>
+        <div class="trust-item"><span>&#127942;</span> 15+ Years</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Product Categories Showcase ===== -->
+  <section class="section" id="categories">
+    <div class="container">
+      <div class="section-header animate-on-scroll">
+        <span class="section-label">What We Build</span>
+        <h2>Our Product Range</h2>
+        <p>From heavy-duty tippers to custom fabrication, we manufacture automobile bodies that power India's industries.</p>
+      </div>
+      <div class="category-showcase">
+        <a href="pages/catalog.html" class="cat-tile cat-tile-lg animate-on-scroll">
+          <img src="assets/tipper-1.jpg" alt="Tippers" loading="lazy">
+          <div class="cat-tile-overlay"></div>
+          <div class="cat-tile-content">
+            <span class="cat-tile-icon">&#128667;</span>
+            <h3>Tippers</h3>
+            <p>6, 10 &amp; 12-Wheeler heavy-duty tipper bodies for mining &amp; construction</p>
+            <span class="cat-tile-link">View Range &rarr;</span>
+          </div>
+        </a>
+        <a href="pages/catalog.html" class="cat-tile animate-on-scroll">
+          <img src="assets/flat-bed-trailor.jpg" alt="Trailers" loading="lazy">
+          <div class="cat-tile-overlay"></div>
+          <div class="cat-tile-content">
+            <span class="cat-tile-icon">&#128666;</span>
+            <h3>Trailers</h3>
+            <p>Flatbed, low-bed &amp; skeletal trailers</p>
+            <span class="cat-tile-link">View Range &rarr;</span>
+          </div>
+        </a>
+        <a href="pages/catalog.html" class="cat-tile animate-on-scroll">
+          <img src="assets/tractor-trolley.jpg" alt="Tractor Bodies" loading="lazy">
+          <div class="cat-tile-overlay"></div>
+          <div class="cat-tile-content">
+            <span class="cat-tile-icon">&#128668;</span>
+            <h3>Tractor Bodies</h3>
+            <p>Custom tractor body &amp; trolley fabrication</p>
+            <span class="cat-tile-link">View Range &rarr;</span>
+          </div>
+        </a>
+        <a href="pages/catalog.html" class="cat-tile animate-on-scroll">
+          <img src="assets/tip-trailor-2.jpg" alt="Tip Trailers" loading="lazy">
+          <div class="cat-tile-overlay"></div>
+          <div class="cat-tile-content">
+            <span class="cat-tile-icon">&#128663;</span>
+            <h3>Tip Trailers</h3>
+            <p>32-34 cum hydraulic tip trailers</p>
+            <span class="cat-tile-link">View Range &rarr;</span>
+          </div>
+        </a>
+        <a href="pages/catalog.html" class="cat-tile animate-on-scroll">
+          <img src="assets/container-bodies.jpg" alt="Custom Fabrication" loading="lazy">
+          <div class="cat-tile-overlay"></div>
+          <div class="cat-tile-content">
+            <span class="cat-tile-icon">&#128295;</span>
+            <h3>Custom Bodies</h3>
+            <p>Container bodies &amp; custom fabrication</p>
+            <span class="cat-tile-link">View Range &rarr;</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Stats Counter ===== -->
+  <section class="stats-section">
+    <div class="container">
+      <div class="stats-counter-grid">
+        <div class="counter-card animate-on-scroll">
+          <div class="counter-number" data-target="15">0</div>
+          <span class="counter-suffix">+</span>
+          <p>Years of Excellence</p>
+        </div>
+        <div class="counter-card animate-on-scroll">
+          <div class="counter-number" data-target="10000">0</div>
+          <span class="counter-suffix">+</span>
+          <p>Vehicles Built</p>
+        </div>
+        <div class="counter-card animate-on-scroll">
+          <div class="counter-number" data-target="500">0</div>
+          <span class="counter-suffix">+</span>
+          <p>Happy Clients</p>
+        </div>
+        <div class="counter-card animate-on-scroll">
+          <div class="counter-number" data-target="15000">0</div>
+          <span class="counter-suffix">sq.ft</span>
+          <p>Manufacturing Facility</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Featured Products ===== -->
+  <section class="section section-alt" id="products">
+    <div class="container">
+      <div class="section-header animate-on-scroll">
+        <span class="section-label">Featured Products</span>
+        <h2>Built Tough, Built to Last</h2>
+        <p>Browse our most popular automobile bodies - each engineered for maximum durability and performance.</p>
+      </div>
+      <div class="products-grid" id="homeProducts">
+        <!-- Rendered by catalog.js -->
+      </div>
+      <div class="text-center mt-4 animate-on-scroll">
+        <a href="pages/catalog.html" class="btn btn-primary btn-lg">View Full Catalog &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Image Gallery Strip ===== -->
+  <section class="gallery-strip">
+    <div class="gallery-scroll">
+      <img src="assets/tipper.jpg" alt="Tipper Body" loading="lazy">
+      <img src="assets/flat-bed-trailor.jpg" alt="Flatbed Trailer" loading="lazy">
+      <img src="assets/tip-trailor.jpg" alt="Tip Trailer" loading="lazy">
+      <img src="assets/tractor-trolley.jpg" alt="Tractor Trolley" loading="lazy">
+      <img src="assets/tip-trailor-34cum.jpg" alt="34 Cum Tip Trailer" loading="lazy">
+      <img src="assets/container-bodies.jpg" alt="Container Bodies" loading="lazy">
+      <img src="assets/tip-trailor-2.jpg" alt="Tip Trailers" loading="lazy">
+      <img src="assets/tipper-1.jpg" alt="Tipper Fleet" loading="lazy">
+      <!-- Duplicate for seamless loop -->
+      <img src="assets/tipper.jpg" alt="Tipper Body" loading="lazy">
+      <img src="assets/flat-bed-trailor.jpg" alt="Flatbed Trailer" loading="lazy">
+      <img src="assets/tip-trailor.jpg" alt="Tip Trailer" loading="lazy">
+      <img src="assets/tractor-trolley.jpg" alt="Tractor Trolley" loading="lazy">
+    </div>
+  </section>
+
+  <!-- ===== Why Choose Us ===== -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header animate-on-scroll">
+        <span class="section-label">Why Himalaya</span>
+        <h2>The Himalaya Advantage</h2>
+        <p>Decades of expertise, unmatched quality, and a commitment to your specific needs.</p>
+      </div>
+      <div class="features-grid-v2">
+        <div class="feature-card-v2 animate-on-scroll">
+          <div class="feature-icon-v2" style="background:rgba(0,184,148,0.12);color:var(--green);">&#9878;</div>
+          <div class="feature-body">
+            <h3>Premium Materials</h3>
+            <p>High-tensile &amp; Hardox steel, precision CNC cutting, and certified MIG/TIG welding on every build.</p>
+          </div>
+        </div>
+        <div class="feature-card-v2 animate-on-scroll">
+          <div class="feature-icon-v2" style="background:rgba(9,132,227,0.12);color:var(--blue);">&#128736;</div>
+          <div class="feature-body">
+            <h3>Custom Engineering</h3>
+            <p>Any body, any vehicle. Our engineering team designs and fabricates exactly what you need, from scratch.</p>
+          </div>
+        </div>
+        <div class="feature-card-v2 animate-on-scroll">
+          <div class="feature-icon-v2" style="background:rgba(253,203,110,0.2);color:#e67e22;">&#9200;</div>
+          <div class="feature-body">
+            <h3>On-Time Delivery</h3>
+            <p>Streamlined production with a dedicated project manager ensures your order is delivered on schedule.</p>
+          </div>
+        </div>
+        <div class="feature-card-v2 animate-on-scroll">
+          <div class="feature-icon-v2" style="background:rgba(212,56,13,0.1);color:var(--primary);">&#128176;</div>
+          <div class="feature-body">
+            <h3>Factory-Direct Pricing</h3>
+            <p>No middlemen, no inflated costs. Get the best value with transparent, competitive pricing.</p>
+          </div>
+        </div>
+        <div class="feature-card-v2 animate-on-scroll">
+          <div class="feature-icon-v2" style="background:rgba(108,92,231,0.12);color:#6c5ce7;">&#128205;</div>
+          <div class="feature-body">
+            <h3>Pan-India Service</h3>
+            <p>Based in Jamshedpur's industrial hub, we serve clients across Eastern India with logistics support.</p>
+          </div>
+        </div>
+        <div class="feature-card-v2 animate-on-scroll">
+          <div class="feature-icon-v2" style="background:rgba(0,184,148,0.12);color:var(--green);">&#128737;</div>
+          <div class="feature-body">
+            <h3>After-Sales Warranty</h3>
+            <p>Full warranty coverage with dedicated service support. We stand behind every product we deliver.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Process Section ===== -->
+  <section class="section section-alt" id="process">
+    <div class="container">
+      <div class="section-header animate-on-scroll">
+        <span class="section-label">How It Works</span>
+        <h2>From Inquiry to Delivery</h2>
+        <p>Our streamlined process makes it easy to get the exact automobile body you need.</p>
+      </div>
+      <div class="process-steps">
+        <div class="process-step animate-on-scroll">
+          <div class="process-num">01</div>
+          <h3>Send Inquiry</h3>
+          <p>Browse our catalog, select products, and submit your requirements or request a custom quote.</p>
+        </div>
+        <div class="process-connector"></div>
+        <div class="process-step animate-on-scroll">
+          <div class="process-num">02</div>
+          <h3>Design &amp; Quote</h3>
+          <p>Our engineers review your specs, prepare technical drawings, and provide a detailed quotation.</p>
+        </div>
+        <div class="process-connector"></div>
+        <div class="process-step animate-on-scroll">
+          <div class="process-num">03</div>
+          <h3>Manufacturing</h3>
+          <p>Precision fabrication in our 15,000 sq.ft. facility with quality checks at every stage.</p>
+        </div>
+        <div class="process-connector"></div>
+        <div class="process-step animate-on-scroll">
+          <div class="process-num">04</div>
+          <h3>Delivery &amp; Support</h3>
+          <p>Complete body mounting, documentation, and after-sales support with warranty coverage.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA Section ===== -->
+  <section class="cta-section-v2">
+    <div class="cta-bg">
+      <img src="assets/tip-trailor-34cum.jpg" alt="Himalaya Enterprises Manufacturing" loading="lazy">
+    </div>
+    <div class="cta-overlay"></div>
+    <div class="container cta-inner">
+      <h2 class="animate-on-scroll">Ready to Build Your Next Vehicle Body?</h2>
+      <p class="animate-on-scroll">Whether you need a single tipper or a fleet of trailers, our team is ready to deliver quality at scale.</p>
+      <div class="cta-btns animate-on-scroll">
+        <a href="pages/contact.html" class="btn btn-primary btn-lg">Get Free Quote</a>
+        <a href="pages/catalog.html" class="btn btn-outline-white btn-lg">Browse Catalog</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Testimonials ===== -->
+  <section class="section" id="testimonials">
+    <div class="container">
+      <div class="section-header animate-on-scroll">
+        <span class="section-label">Testimonials</span>
+        <h2>Trusted by Transporters &amp; Fleet Owners</h2>
+        <p>Hear from the businesses that rely on Himalaya Enterprises.</p>
+      </div>
+      <div class="testimonials-grid-v2">
+        <div class="testimonial-card-v2 animate-on-scroll">
+          <div class="testimonial-quote">&#8220;</div>
+          <p class="testimonial-text">"We've been buying tipper bodies from Himalaya for 5 years. The quality is unmatched and they always deliver on time. Best in Jamshedpur without a doubt."</p>
+          <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">AK</div>
+            <div class="testimonial-info">
+              <h4>Ajay Kumar</h4>
+              <p>Fleet Owner, Dhanbad</p>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card-v2 animate-on-scroll">
+          <div class="testimonial-quote">&#8220;</div>
+          <p class="testimonial-text">"Got a custom water tanker built for our municipal contract. The team understood our specs perfectly and the final product exceeded expectations."</p>
+          <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">SM</div>
+            <div class="testimonial-info">
+              <h4>Sunil Mehta</h4>
+              <p>Municipal Contractor, Ranchi</p>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card-v2 animate-on-scroll">
+          <div class="testimonial-quote">&#8220;</div>
+          <p class="testimonial-text">"Himalaya Enterprises fabricated 12 trailer bodies for our logistics fleet. Professional team, fair pricing, and the bodies have held up beautifully under heavy use."</p>
+          <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">PG</div>
+            <div class="testimonial-info">
+              <h4>Priya Gupta</h4>
+              <p>Director, PG Logistics</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>Himalaya Enterprises</h3>
+          <p>Jamshedpur's trusted automobile body manufacturing company. Building tippers, trailers, tractor bodies, water tanks, and custom fabrication solutions since 2009.</p>
+          <div class="footer-social">
+            <a href="#" title="Facebook">f</a>
+            <a href="#" title="Instagram">in</a>
+            <a href="#" title="LinkedIn">Li</a>
+            <a href="#" title="YouTube">YT</a>
+          </div>
+        </div>
+        <div>
+          <h4>Products</h4>
+          <ul>
+            <li><a href="pages/catalog.html">Tippers</a></li>
+            <li><a href="pages/catalog.html">Trailers</a></li>
+            <li><a href="pages/catalog.html">Tractor Bodies</a></li>
+            <li><a href="pages/catalog.html">Water Tanks</a></li>
+            <li><a href="pages/catalog.html">Custom Work</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Company</h4>
+          <ul>
+            <li><a href="pages/about.html">About Us</a></li>
+            <li><a href="pages/about.html">Our CEO</a></li>
+            <li><a href="pages/contact.html">Contact</a></li>
+            <li><a href="#">Careers</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <ul>
+            <li>Industrial Area, Adityapur</li>
+            <li>Jamshedpur, Jharkhand 831013</li>
+            <li>+91 98765 43210</li>
+            <li>info@himalayaentp.com</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        &copy; 2024 Himalaya Enterprises. All rights reserved. | CEO: Rajeev Shukla
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== Floating Buttons ===== -->
+  <a href="https://wa.me/919876543210" target="_blank" class="fab-whatsapp" title="Chat on WhatsApp">&#128172;</a>
+  <button class="back-to-top" title="Back to top">&#8593;</button>
+
+  <!-- ===== Cart Sidebar ===== -->
+  <div class="cart-overlay" onclick="Cart.closeCart()"></div>
+  <div class="cart-sidebar">
+    <div class="cart-header">
+      <h3>&#128722; Inquiry Basket</h3>
+      <button class="modal-close" onclick="Cart.closeCart()">&#10005;</button>
+    </div>
+    <div class="cart-items"></div>
+    <div class="cart-footer">
+      <button class="btn btn-primary btn-block" onclick="Cart.submitInquiry()">Submit Inquiry</button>
+      <button class="btn btn-ghost btn-block mt-1" onclick="Cart.clearCart()">Clear All</button>
+    </div>
+  </div>
+
+  <!-- ===== Login Modal ===== -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Welcome to Himalaya Enterprises</h3>
+        <button class="modal-close" onclick="App.closeModal('loginModal')">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <div class="login-tabs">
+          <button class="login-tab active" data-tab="login" onclick="Auth.switchLoginTab('login')">Login</button>
+          <button class="login-tab" data-tab="register" onclick="Auth.switchLoginTab('register')">Register</button>
+        </div>
+
+        <!-- Login Form -->
+        <form class="login-form" id="loginForm" onsubmit="Auth.handleLogin(event)">
+          <div class="form-group">
+            <label for="loginEmail">Email</label>
+            <input type="email" id="loginEmail" placeholder="your@email.com" required>
+          </div>
+          <div class="form-group">
+            <label for="loginPassword">Password</label>
+            <input type="password" id="loginPassword" placeholder="Enter password" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Login</button>
+          <p class="mt-2 text-center" style="font-size:0.8rem;color:var(--text-muted);">
+            Demo: admin@himalayaentp.com / admin123 (Supplier)<br>
+            ramesh@example.com / buyer123 (Buyer)
+          </p>
+        </form>
+
+        <!-- Register Form -->
+        <form class="login-form" id="registerForm" style="display:none" onsubmit="Auth.handleRegister(event)">
+          <div class="form-group">
+            <label for="regName">Full Name</label>
+            <input type="text" id="regName" placeholder="Your name" required>
+          </div>
+          <div class="form-group">
+            <label for="regEmail">Email</label>
+            <input type="email" id="regEmail" placeholder="your@email.com" required>
+          </div>
+          <div class="form-group">
+            <label for="regPassword">Password</label>
+            <input type="password" id="regPassword" placeholder="Min 6 characters" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label for="regRole">I am a</label>
+            <select id="regRole">
+              <option value="buyer">Buyer / Customer</option>
+              <option value="supplier">Supplier / Manufacturer</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Product Detail Modal ===== -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Product Details</h3>
+        <button class="modal-close" onclick="App.closeModal('productModal')">&#10005;</button>
+      </div>
+      <div class="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/catalog.js"></script>
+  <script src="js/cart.js"></script>
+</body>
+</html>
