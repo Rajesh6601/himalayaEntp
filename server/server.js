@@ -3,6 +3,8 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('./db/connection');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDoc = require('./swagger.json');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,6 +12,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change-me';
 
 app.use(cors());
 app.use(express.json());
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc, { customSiteTitle: 'Himalaya API Docs' }));
 
 // ── Auth Middleware ──
 function authenticate(req, res, next) {
@@ -29,6 +32,11 @@ function requireRole(role) {
     if (req.user.role !== role) return res.status(403).json({ error: 'Forbidden' });
     next();
   };
+}
+
+function isValidUUID(str) {
+  if (!str || typeof str !== 'string') return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 }
 
 // ── Health Check ──
@@ -222,25 +230,29 @@ app.post('/api/orders', authenticate, async (req, res) => {
   const prefix = type === 'rfq' ? 'RFQ-' : 'ORD-';
   const orderId = prefix + Date.now().toString(36).toUpperCase();
 
+  const client = await db.pool.connect();
   try {
-    await db.query('BEGIN');
-    await db.query(
+    await client.query('BEGIN');
+    await client.query(
       'INSERT INTO orders (id, buyer_id, type, notes) VALUES ($1, $2, $3, $4)',
       [orderId, req.user.id, type, notes || '']
     );
     for (const item of items) {
-      await db.query(
+      const productId = isValidUUID(item.product_id) ? item.product_id : null;
+      await client.query(
         `INSERT INTO order_items (order_id, product_id, name, category, specs, quantity, price, price_max)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [orderId, item.product_id || null, item.name, item.category || null, item.specs || null,
+        [orderId, productId, item.name, item.category || null, item.specs || null,
          item.quantity || 1, item.price || 0, item.price_max || 0]
       );
     }
-    await db.query('COMMIT');
+    await client.query('COMMIT');
     res.status(201).json({ id: orderId, status: 'pending' });
   } catch (err) {
-    await db.query('ROLLBACK');
+    await client.query('ROLLBACK');
     res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 });
 

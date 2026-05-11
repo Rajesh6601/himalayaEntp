@@ -209,13 +209,13 @@
     const BuyerDash = {
       currentFilter: 'all',
 
-      init() {
+      async init() {
         if (!Auth.requireAuth('buyer')) return;
         const session = Auth.getSession();
         document.getElementById('buyerGreeting').textContent = `Welcome, ${session.name}!`;
-        this.renderOverview();
+        await this.renderOverview();
         this.renderBrowse();
-        this.renderOrders();
+        await this.renderOrders();
         this.renderFavorites();
       },
 
@@ -231,11 +231,13 @@
         if (name === 'browse') this.renderBrowse();
         if (name === 'favorites') this.renderFavorites();
         if (name === 'orders') this.renderOrders();
+        if (name === 'overview') this.renderOverview();
       },
 
-      renderOverview() {
+      async renderOverview() {
         const session = Auth.getSession();
-        const orders = Cart.getOrdersByBuyer(session.id);
+        let orders;
+        try { orders = (await Cart.fetchOrders()) || Cart.getOrdersByBuyer(session.id); } catch { orders = Cart.getOrdersByBuyer(session.id); }
         const cart = Cart.getItems();
         const favs = Cart.getFavorites();
 
@@ -341,10 +343,11 @@
         }).join('');
       },
 
-      renderOrders() {
+      async renderOrders() {
         const session = Auth.getSession();
         if (!session) return;
-        const orders = Cart.getOrdersByBuyer(session.id);
+        let orders;
+        try { orders = (await Cart.fetchOrders()) || Cart.getOrdersByBuyer(session.id); } catch { orders = Cart.getOrdersByBuyer(session.id); }
         const container = document.getElementById('buyerOrdersList');
         if (!container) return;
 
@@ -412,7 +415,7 @@
         `).join('');
       },
 
-      submitRFQ(e) {
+      async submitRFQ(e) {
         e.preventDefault();
         const formData = {
           productName: document.getElementById('rfqProduct').value.trim(),
@@ -421,11 +424,11 @@
           specifications: document.getElementById('rfqSpecs').value.trim(),
           notes: document.getElementById('rfqNotes').value.trim()
         };
-        const order = Cart.submitRFQ(formData);
+        const order = await Cart.submitRFQ(formData);
         if (order) {
           document.getElementById('rfqForm').reset();
-          this.renderOrders();
-          this.renderOverview();
+          await this.renderOrders();
+          await this.renderOverview();
           this.showSection('orders');
         }
       }
