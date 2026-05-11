@@ -151,9 +151,13 @@ app.put('/api/products/:id', authenticate, requireRole('supplier'), async (req, 
   const { name, category_id, specs, description, price_min, price_max, stock, status, icon } = req.body;
   try {
     const result = await db.query(
-      `UPDATE products SET name=$1, category_id=$2, specs=$3, description=$4, price_min=$5, price_max=$6,
-       stock=$7, status=$8, icon=$9 WHERE id=$10 RETURNING *`,
-      [name, category_id, specs, description, price_min, price_max, stock, status, icon, req.params.id]
+      `UPDATE products SET name=COALESCE($1,name), category_id=COALESCE($2,category_id), specs=COALESCE($3,specs),
+       description=COALESCE($4,description), price_min=COALESCE($5,price_min), price_max=COALESCE($6,price_max),
+       stock=COALESCE($7,stock), status=COALESCE($8,status), icon=COALESCE($9,icon), updated_at=NOW()
+       WHERE id=$10 RETURNING *`,
+      [name || null, category_id || null, specs || null, description !== undefined ? description : null,
+       price_min !== undefined ? price_min : null, price_max !== undefined ? price_max : null,
+       stock !== undefined ? stock : null, status || null, icon || null, req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
     res.json(result.rows[0]);
