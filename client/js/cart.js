@@ -291,9 +291,80 @@ const Cart = {
     return this.getFavorites().includes(productId);
   },
 
+  /* --- Order Detail & Negotiation --- */
+  async fetchOrderDetail(orderId) {
+    try {
+      const o = await API.get('/orders/' + orderId);
+      return {
+        id: o.id,
+        buyerId: o.buyer_id,
+        buyerName: o.buyer_name || '',
+        buyerEmail: o.buyer_email || '',
+        buyerPhone: o.buyer_phone || '',
+        buyerCompany: o.buyer_company || '',
+        items: (o.items || []).map(i => ({
+          productId: i.product_id,
+          name: i.name,
+          category: i.category,
+          specs: i.specs,
+          quantity: i.quantity,
+          price: Number(i.price || 0),
+          priceMax: Number(i.price_max || 0)
+        })),
+        notes: o.notes,
+        status: o.status,
+        type: o.type,
+        totalValue: Number(o.total_value || 0),
+        latestQuote: o.latest_quote,
+        messageCount: o.message_count,
+        createdAt: o.created_at,
+        updatedAt: o.updated_at
+      };
+    } catch (err) {
+      App.showToast('Failed to load order details: ' + err.message, 'error');
+      return null;
+    }
+  },
+
+  async fetchOrderMessages(orderId) {
+    try {
+      const msgs = await API.get('/orders/' + orderId + '/messages');
+      return msgs.map(m => ({
+        id: m.id,
+        orderId: m.order_id,
+        senderId: m.sender_id,
+        senderRole: m.sender_role,
+        senderName: m.sender_name || '',
+        senderCompany: m.sender_company || '',
+        type: m.type,
+        quotedPrice: m.quoted_price ? Number(m.quoted_price) : null,
+        deliveryEstimate: m.delivery_estimate,
+        message: m.message,
+        createdAt: m.created_at
+      }));
+    } catch (err) {
+      App.showToast('Failed to load messages: ' + err.message, 'error');
+      return [];
+    }
+  },
+
+  async sendOrderMessage(orderId, data) {
+    try {
+      const result = await API.post('/orders/' + orderId + '/messages', data);
+      return result;
+    } catch (err) {
+      App.showToast('Failed to send message: ' + err.message, 'error');
+      return null;
+    }
+  },
+
   getStatusLabel(status) {
     const labels = {
       pending: '<span class="badge badge-yellow">Pending</span>',
+      quoted: '<span class="badge badge-blue">Quoted</span>',
+      negotiating: '<span class="badge badge-purple">Negotiating</span>',
+      accepted: '<span class="badge badge-green">Accepted</span>',
+      po_issued: '<span class="badge badge-green">PO Issued</span>',
       confirmed: '<span class="badge badge-blue">Confirmed</span>',
       'in-progress': '<span class="badge badge-blue">In Progress</span>',
       completed: '<span class="badge badge-green">Completed</span>',
@@ -303,11 +374,26 @@ const Cart = {
   },
 
   renderStatusTimeline(status) {
-    const steps = ['pending', 'confirmed', 'in-progress', 'completed'];
-    const currentIdx = steps.indexOf(status);
+    const steps = [
+      { key: 'pending', label: 'Submitted' },
+      { key: 'quoted', label: 'Quoted' },
+      { key: 'negotiating', label: 'Negotiating' },
+      { key: 'accepted', label: 'Accepted' },
+      { key: 'po_issued', label: 'PO Issued' },
+      { key: 'in-progress', label: 'In Progress' },
+      { key: 'completed', label: 'Completed' }
+    ];
+    const statusOrder = steps.map(s => s.key);
+    let currentIdx = statusOrder.indexOf(status);
+    // Map confirmed to in-progress position for display
+    if (status === 'confirmed') currentIdx = statusOrder.indexOf('in-progress');
+    if (status === 'cancelled') currentIdx = -1;
     return `<div class="status-timeline">
       ${steps.map((s, i) => `
-        <div class="status-dot ${i < currentIdx ? 'completed' : ''} ${i === currentIdx ? 'current' : ''}"></div>
+        <div class="status-step">
+          <div class="status-dot ${i < currentIdx ? 'completed' : ''} ${i === currentIdx ? 'current' : ''} ${status === 'cancelled' && i === 0 ? 'current' : ''}"></div>
+          <span class="status-label">${s.label}</span>
+        </div>
         ${i < steps.length - 1 ? `<div class="status-line ${i < currentIdx ? 'completed' : ''}"></div>` : ''}
       `).join('')}
     </div>`;

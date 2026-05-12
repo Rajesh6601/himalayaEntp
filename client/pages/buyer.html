@@ -183,6 +183,19 @@
     </div>
   </div>
 
+  <!-- Order Negotiation Modal -->
+  <div class="modal-overlay" id="orderNegotiateModal">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h3 id="negModalTitle">Order Details</h3>
+        <button class="modal-close" onclick="App.closeModal('orderNegotiateModal')">&#10005;</button>
+      </div>
+      <div class="modal-body" id="negModalBody">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </div>
+
   <!-- Login Modal -->
   <div class="modal-overlay" id="loginModal">
     <div class="modal">
@@ -356,8 +369,11 @@
           return;
         }
 
-        container.innerHTML = orders.reverse().map(o => `
-          <div style="padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;">
+        container.innerHTML = orders.reverse().map(o => {
+          const canNegotiate = ['quoted', 'negotiating'].includes(o.status);
+          const canIssuePO = o.status === 'accepted';
+          return `
+          <div style="padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;cursor:pointer;transition:border-color 0.3s ease;" onclick="BuyerDash.openOrderDetail('${o.id}')" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
               <div>
                 <strong style="font-size:1.1rem;">${o.id}</strong>
@@ -379,9 +395,157 @@
               `).join('')}
             </div>
             ${o.notes ? `<p style="margin-top:12px;font-size:0.85rem;color:var(--text-light);"><strong>Notes:</strong> ${o.notes}</p>` : ''}
-            <p style="margin-top:8px;font-size:0.8rem;color:var(--text-muted);">Submitted: ${new Date(o.createdAt).toLocaleString()}</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+              <p style="font-size:0.8rem;color:var(--text-muted);">Submitted: ${new Date(o.createdAt).toLocaleString()}</p>
+              ${canNegotiate ? '<span style="font-size:0.8rem;color:var(--primary);font-weight:600;">Click to view quote &amp; negotiate &rarr;</span>' : ''}
+              ${canIssuePO ? '<span style="font-size:0.8rem;color:var(--green);font-weight:600;">Click to issue Purchase Order &rarr;</span>' : ''}
+            </div>
+          </div>`;
+        }).join('');
+      },
+
+      async openOrderDetail(orderId) {
+        const order = await Cart.fetchOrderDetail(orderId);
+        if (!order) return;
+        const messages = await Cart.fetchOrderMessages(orderId);
+        const body = document.getElementById('negModalBody');
+        document.getElementById('negModalTitle').textContent = order.id;
+
+        const isQuoted = order.status === 'quoted';
+        const isNegotiating = order.status === 'negotiating';
+        const canAct = isQuoted || isNegotiating;
+        const isAccepted = order.status === 'accepted';
+
+        body.innerHTML = `
+          <!-- Status & Items -->
+          <div style="margin-bottom:20px;">
+            ${Cart.renderStatusTimeline(order.status)}
           </div>
-        `).join('');
+
+          <div style="margin-bottom:20px;">
+            <h4 style="font-size:0.9rem;margin-bottom:8px;">Items</h4>
+            ${order.items.map(i => `
+              <div style="padding:10px;background:var(--bg-alt);border-radius:var(--radius-sm);margin-bottom:6px;border:1px solid var(--border);">
+                <div style="display:flex;justify-content:space-between;"><strong>${i.name}</strong><span class="badge badge-blue">Qty: ${i.quantity}</span></div>
+                ${i.specs ? `<p style="font-size:0.83rem;color:var(--text-light);margin-top:4px;">${i.specs}</p>` : ''}
+              </div>
+            `).join('')}
+            ${order.notes ? `<p style="margin-top:8px;font-size:0.85rem;color:var(--text-light);"><strong>Notes:</strong> ${order.notes}</p>` : ''}
+            ${order.latestQuote ? `<p style="margin-top:8px;font-size:1rem;"><strong>Latest Quote:</strong> ${App.formatCurrency(order.latestQuote)}</p>` : ''}
+          </div>
+
+          <!-- Negotiation Thread -->
+          <div style="margin-bottom:20px;">
+            <h4 style="font-size:0.9rem;margin-bottom:8px;">Negotiation Thread (${messages.length})</h4>
+            <div class="negotiation-thread" id="buyerNegThread">
+              ${messages.length === 0 ? '<p style="text-align:center;color:var(--text-muted);padding:20px;">No messages yet. Waiting for supplier quote.</p>' :
+                messages.map(m => {
+                  const isSent = m.senderRole === 'buyer';
+                  const typeLabels = { quote: 'Quote', counter_offer: 'Counter-Offer', comment: 'Comment', acceptance: 'Accepted', rejection: 'Rejected' };
+                  return `<div class="neg-message ${isSent ? 'sent' : 'received'}">
+                    <span class="neg-type-badge">${typeLabels[m.type] || m.type}</span>
+                    ${m.quotedPrice ? `<div class="neg-price">${App.formatCurrency(m.quotedPrice)}</div>` : ''}
+                    ${m.deliveryEstimate ? `<p style="font-size:0.82rem;margin-bottom:4px;">Delivery: ${m.deliveryEstimate}</p>` : ''}
+                    ${m.message ? `<p>${m.message}</p>` : ''}
+                    <div class="neg-meta">
+                      <span>${m.senderName}${m.senderCompany ? ' (' + m.senderCompany + ')' : ''}</span>
+                      <span>${new Date(m.createdAt).toLocaleString()}</span>
+                    </div>
+                  </div>`;
+                }).join('')
+              }
+            </div>
+          </div>
+
+          <!-- Actions -->
+          ${canAct ? `
+          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);">
+            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+              <button class="btn btn-success btn-sm" onclick="BuyerDash.acceptQuote('${orderId}', ${order.latestQuote || 0})">Accept Quote</button>
+              <button class="btn btn-danger btn-sm" onclick="BuyerDash.rejectQuote('${orderId}')">Reject</button>
+            </div>
+            <h4 style="font-size:0.85rem;margin-bottom:10px;">Or send a counter-offer:</h4>
+            <form onsubmit="BuyerDash.sendCounterOffer(event, '${orderId}')">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Your Price (&#8377;) *</label>
+                  <input type="number" id="counterPrice" min="0" step="0.01" required placeholder="e.g. 220000">
+                </div>
+                <div class="form-group">
+                  <label>Message</label>
+                  <input type="text" id="counterMessage" placeholder="Reason or notes...">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">Send Counter-Offer</button>
+            </form>
+          </div>` : ''}
+
+          ${isAccepted ? `
+          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);">
+            <p style="font-size:0.9rem;margin-bottom:12px;"><strong>Quote accepted at ${App.formatCurrency(order.totalValue || order.latestQuote || 0)}.</strong> Issue a Purchase Order to proceed.</p>
+            <button class="btn btn-primary" onclick="BuyerDash.issuePO('${orderId}')">Issue Purchase Order</button>
+          </div>` : ''}
+        `;
+
+        const thread = document.getElementById('buyerNegThread');
+        if (thread) thread.scrollTop = thread.scrollHeight;
+
+        App.openModal('orderNegotiateModal');
+      },
+
+      async acceptQuote(orderId, price) {
+        if (!confirm('Accept this quote' + (price ? ' at ' + App.formatCurrency(price) : '') + '?')) return;
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'acceptance',
+          quoted_price: price || null,
+          message: 'Quote accepted.'
+        });
+        if (result) {
+          App.showToast('Quote accepted!', 'success');
+          await this.openOrderDetail(orderId);
+          await this.renderOrders();
+          await this.renderOverview();
+        }
+      },
+
+      async rejectQuote(orderId) {
+        const reason = prompt('Reason for rejection (optional):');
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'rejection',
+          message: reason ? reason.trim() : 'Quote rejected by buyer.'
+        });
+        if (result) {
+          App.showToast('Quote rejected. Order cancelled.', 'info');
+          App.closeModal('orderNegotiateModal');
+          await this.renderOrders();
+          await this.renderOverview();
+        }
+      },
+
+      async sendCounterOffer(e, orderId) {
+        e.preventDefault();
+        const price = document.getElementById('counterPrice').value;
+        const message = document.getElementById('counterMessage').value.trim();
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'counter_offer',
+          quoted_price: parseFloat(price),
+          message: message || null
+        });
+        if (result) {
+          App.showToast('Counter-offer sent!', 'success');
+          await this.openOrderDetail(orderId);
+          await this.renderOrders();
+          await this.renderOverview();
+        }
+      },
+
+      async issuePO(orderId) {
+        if (!confirm('Issue a Purchase Order for this order?')) return;
+        await Cart.updateOrderStatus(orderId, 'po_issued');
+        App.showToast('Purchase Order issued!', 'success');
+        await this.openOrderDetail(orderId);
+        await this.renderOrders();
+        await this.renderOverview();
       },
 
       renderFavorites() {

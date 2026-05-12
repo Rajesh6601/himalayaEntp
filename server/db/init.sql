@@ -61,7 +61,7 @@ CREATE TABLE orders (
     buyer_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     type        VARCHAR(10) NOT NULL CHECK (type IN ('inquiry', 'rfq')),
     status      VARCHAR(20) NOT NULL DEFAULT 'pending'
-                CHECK (status IN ('pending', 'confirmed', 'in-progress', 'completed', 'cancelled')),
+                CHECK (status IN ('pending', 'quoted', 'negotiating', 'accepted', 'po_issued', 'confirmed', 'in-progress', 'completed', 'cancelled')),
     notes       TEXT,
     total_value NUMERIC(14, 2) DEFAULT 0,
     created_at  TIMESTAMPTZ DEFAULT NOW(),
@@ -85,6 +85,22 @@ CREATE TABLE order_items (
 );
 
 CREATE INDEX idx_order_items_order ON order_items(order_id);
+
+-- ── Order Messages (Negotiation Thread) ──
+CREATE TABLE order_messages (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id        VARCHAR(30) NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    sender_id       UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    sender_role     VARCHAR(20) NOT NULL CHECK (sender_role IN ('buyer', 'supplier', 'admin')),
+    type            VARCHAR(20) NOT NULL
+                    CHECK (type IN ('quote', 'counter_offer', 'comment', 'acceptance', 'rejection')),
+    quoted_price    NUMERIC(14, 2),
+    delivery_estimate VARCHAR(100),
+    message         TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_order_messages_order ON order_messages(order_id);
 
 -- ── Favorites ──
 CREATE TABLE favorites (

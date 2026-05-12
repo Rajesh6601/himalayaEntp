@@ -11,7 +11,7 @@ Use this skill whenever code changes need to be deployed — locally or to the l
 | **client** | `rajesh6601/himalaya-client` | 80 (host 8080) | Nginx 1.27-alpine (static copy, no build step) |
 | **pgadmin** | dpage/pgadmin4:latest | 80 (host 5051) | — |
 
-**Database Tables (8):** users, categories, products, orders, order_items, favorites, contact_inquiries, audit_log
+**Database Tables (9):** users, categories, products, orders, order_items, order_messages, favorites, contact_inquiries, audit_log
 
 ## Prerequisites (one-time setup on your machine)
 - Docker Desktop installed and running
@@ -183,7 +183,10 @@ Set these in `/opt/himalaya/.env` on the VPS:
 | DELETE | `/api/products/:id` | Supplier | Delete product |
 | GET | `/api/orders` | Yes | List orders (buyer sees own, supplier sees all) |
 | POST | `/api/orders` | Yes | Place order |
-| PATCH | `/api/orders/:id/status` | Supplier | Update order status |
+| GET | `/api/orders/:id` | Yes | Single order detail (buyer info, items, latest quote, message count) |
+| GET | `/api/orders/:id/messages` | Yes | Negotiation thread (all messages ordered by created_at) |
+| POST | `/api/orders/:id/messages` | Yes | Send quote/counter-offer/comment/acceptance/rejection |
+| PATCH | `/api/orders/:id/status` | Yes | Update order status (supplier: any valid; buyer: po_issued, cancelled) |
 | GET | `/api/favorites` | Yes | List user favorites |
 | POST | `/api/favorites/:productId` | Yes | Add to favorites |
 | DELETE | `/api/favorites/:productId` | Yes | Remove from favorites |
@@ -196,6 +199,42 @@ Set these in `/opt/himalaya/.env` on the VPS:
 |------|-------|----------|
 | Supplier | admin@himalayaentp.com | admin123 |
 | Buyer | ramesh@example.com | buyer123 |
+
+---
+
+## RFQ Negotiation Workflow
+
+The system supports a full RFQ lifecycle:
+
+```
+Buyer sends RFQ → Supplier reviews → Supplier sends Quote → Buyer reviews
+→ Negotiation (counter-offers) → Agreement → Purchase Order → Fulfillment
+```
+
+**Order statuses:** pending → quoted → negotiating → accepted → po_issued → in-progress → completed
+
+**Status transitions are driven by messages:**
+| Current Status | Message Type | Sender | New Status |
+|---|---|---|---|
+| pending | quote | supplier | quoted |
+| quoted | counter_offer | buyer | negotiating |
+| quoted | acceptance | buyer | accepted |
+| quoted/negotiating | rejection | any | cancelled |
+| negotiating | quote (revised) | supplier | negotiating |
+| negotiating | counter_offer | buyer | negotiating |
+| negotiating | acceptance | any | accepted |
+| any | comment | any | unchanged |
+
+**Migration for existing deployments:**
+```bash
+# Local
+docker exec -i himalaya-entp-db psql -U himalaya_admin -d himalaya_db < server/db/migrate-001-negotiation.sql
+
+# VPS
+sshpass -p '<VPS_PASSWORD>' scp server/db/migrate-001-negotiation.sql root@187.127.147.87:/tmp/
+sshpass -p '<VPS_PASSWORD>' ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o KbdInteractiveAuthentication=no root@187.127.147.87 \
+  "docker exec -i himalaya-entp-db psql -U himalaya_admin -d himalaya_db < /tmp/migrate-001-negotiation.sql"
+```
 
 ---
 

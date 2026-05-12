@@ -195,6 +195,19 @@
     </div>
   </div>
 
+  <!-- Order Detail Modal -->
+  <div class="modal-overlay" id="orderDetailModal">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h3 id="orderDetailTitle">Order Details</h3>
+        <button class="modal-close" onclick="App.closeModal('orderDetailModal')">&#10005;</button>
+      </div>
+      <div class="modal-body" id="orderDetailBody">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </div>
+
   <!-- Login Modal (fallback) -->
   <div class="modal-overlay" id="loginModal">
     <div class="modal">
@@ -318,28 +331,169 @@
         document.getElementById('allOrders').innerHTML = orders.length === 0
           ? '<div class="empty-state"><div class="empty-icon">&#128203;</div><h3>No orders</h3><p>Customer inquiries and orders will appear here.</p></div>'
           : `<table class="data-table">
-              <thead><tr><th>Order ID</th><th>Buyer</th><th>Email</th><th>Type</th><th>Items</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+              <thead><tr><th>Order ID</th><th>Buyer</th><th>Type</th><th>Items</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
               <tbody>${orders.map(o => `
-                <tr>
+                <tr class="clickable-row" onclick="SupplierDash.openOrderDetail('${o.id}')">
                   <td><strong>${o.id}</strong></td>
                   <td>${o.buyerName}</td>
-                  <td>${o.buyerEmail}</td>
-                  <td>${o.type === 'rfq' ? 'RFQ' : 'Inquiry'}</td>
+                  <td>${o.type === 'rfq' ? '<span class="badge badge-blue">RFQ</span>' : '<span class="badge badge-green">Inquiry</span>'}</td>
                   <td>${o.items.map(i => i.name).join(', ')}</td>
                   <td>${Cart.getStatusLabel(o.status)}</td>
                   <td>${new Date(o.createdAt).toLocaleDateString()}</td>
                   <td>
-                    <select onchange="SupplierDash.changeOrderStatus('${o.id}', this.value)" style="padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);font-size:0.8rem;">
-                      <option value="pending" ${o.status==='pending'?'selected':''}>Pending</option>
-                      <option value="confirmed" ${o.status==='confirmed'?'selected':''}>Confirmed</option>
-                      <option value="in-progress" ${o.status==='in-progress'?'selected':''}>In Progress</option>
-                      <option value="completed" ${o.status==='completed'?'selected':''}>Completed</option>
-                      <option value="cancelled" ${o.status==='cancelled'?'selected':''}>Cancelled</option>
-                    </select>
+                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();SupplierDash.openOrderDetail('${o.id}')">
+                      ${['pending','negotiating'].includes(o.status) ? 'Review &amp; Quote' : 'View Details'}
+                    </button>
                   </td>
                 </tr>
               `).join('')}</tbody>
             </table>`;
+      },
+
+      async openOrderDetail(orderId) {
+        const order = await Cart.fetchOrderDetail(orderId);
+        if (!order) return;
+        const messages = await Cart.fetchOrderMessages(orderId);
+        const body = document.getElementById('orderDetailBody');
+        document.getElementById('orderDetailTitle').textContent = order.id + ' - ' + (order.type === 'rfq' ? 'RFQ' : 'Inquiry');
+
+        const isPending = order.status === 'pending';
+        const isNegotiating = order.status === 'negotiating';
+        const isQuoted = order.status === 'quoted';
+        const canQuote = isPending || isNegotiating || isQuoted;
+        const isAccepted = order.status === 'accepted' || order.status === 'po_issued';
+        const canProgress = isAccepted || order.status === 'confirmed' || order.status === 'in-progress';
+
+        body.innerHTML = `
+          <!-- RFQ Info -->
+          <div style="margin-bottom:20px;">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">Buyer Information</h4>
+            <div class="order-info-grid">
+              <div class="order-info-item"><label>Name</label><span>${order.buyerName}</span></div>
+              <div class="order-info-item"><label>Company</label><span>${order.buyerCompany || '-'}</span></div>
+              <div class="order-info-item"><label>Email</label><span>${order.buyerEmail}</span></div>
+              <div class="order-info-item"><label>Phone</label><span>${order.buyerPhone || '-'}</span></div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:20px;">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">Items & Specifications</h4>
+            ${order.items.map(i => `
+              <div style="padding:12px;background:var(--bg-alt);border-radius:var(--radius-sm);margin-bottom:8px;border:1px solid var(--border);">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <strong>${i.name}</strong>
+                  <span class="badge badge-blue">Qty: ${i.quantity}</span>
+                </div>
+                ${i.specs ? `<p style="font-size:0.85rem;color:var(--text-light);margin-top:6px;">${i.specs}</p>` : ''}
+                ${i.price ? `<p style="font-size:0.85rem;color:var(--text-muted);margin-top:4px;">Budget: ${App.formatCurrency(i.price)}${i.priceMax ? ' - ' + App.formatCurrency(i.priceMax) : ''}</p>` : ''}
+              </div>
+            `).join('')}
+            ${order.notes ? `<p style="margin-top:10px;font-size:0.85rem;color:var(--text-light);"><strong>Notes:</strong> ${order.notes}</p>` : ''}
+          </div>
+
+          <div style="margin-bottom:20px;">
+            <h4 style="font-size:0.9rem;margin-bottom:8px;">Status</h4>
+            ${Cart.renderStatusTimeline(order.status)}
+            ${order.latestQuote ? `<p style="margin-top:8px;font-size:0.9rem;"><strong>Latest quoted price:</strong> ${App.formatCurrency(order.latestQuote)}</p>` : ''}
+          </div>
+
+          <!-- Negotiation Thread -->
+          <div style="margin-bottom:20px;">
+            <h4 style="font-size:0.9rem;margin-bottom:8px;">Negotiation Thread (${messages.length} messages)</h4>
+            <div class="negotiation-thread" id="negThread">
+              ${messages.length === 0 ? '<p style="text-align:center;color:var(--text-muted);padding:20px;">No messages yet. Send a quote to start the negotiation.</p>' :
+                messages.map(m => {
+                  const isSent = m.senderRole === 'supplier' || m.senderRole === 'admin';
+                  const typeLabels = { quote: 'Quote', counter_offer: 'Counter-Offer', comment: 'Comment', acceptance: 'Accepted', rejection: 'Rejected' };
+                  return `<div class="neg-message ${isSent ? 'sent' : 'received'}">
+                    <span class="neg-type-badge">${typeLabels[m.type] || m.type}</span>
+                    ${m.quotedPrice ? `<div class="neg-price">${App.formatCurrency(m.quotedPrice)}</div>` : ''}
+                    ${m.deliveryEstimate ? `<p style="font-size:0.82rem;margin-bottom:4px;">Delivery: ${m.deliveryEstimate}</p>` : ''}
+                    ${m.message ? `<p>${m.message}</p>` : ''}
+                    <div class="neg-meta">
+                      <span>${m.senderName}</span>
+                      <span>${new Date(m.createdAt).toLocaleString()}</span>
+                    </div>
+                  </div>`;
+                }).join('')
+              }
+            </div>
+          </div>
+
+          <!-- Action Panel -->
+          ${canQuote ? `
+          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">${isPending ? 'Send Quote' : 'Send Revised Quote'}</h4>
+            <form onsubmit="SupplierDash.sendQuote(event, '${orderId}')">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Quoted Price (&#8377;) *</label>
+                  <input type="number" id="quotePrice" min="0" step="0.01" required placeholder="e.g. 250000">
+                </div>
+                <div class="form-group">
+                  <label>Delivery Estimate</label>
+                  <input type="text" id="quoteDelivery" placeholder="e.g. 4-6 weeks">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Remarks</label>
+                <textarea id="quoteMessage" rows="2" placeholder="Terms, conditions, details..."></textarea>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button type="submit" class="btn btn-primary btn-sm">Send Quote</button>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="SupplierDash.addComment('${orderId}')">Add Comment</button>
+              </div>
+            </form>
+          </div>` : ''}
+
+          ${canProgress ? `
+          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">Update Production Status</h4>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              ${order.status === 'accepted' || order.status === 'po_issued' ? `<button class="btn btn-primary btn-sm" onclick="SupplierDash.changeOrderStatus('${orderId}','in-progress');App.closeModal('orderDetailModal');">Start Production</button>` : ''}
+              ${order.status === 'in-progress' ? `<button class="btn btn-success btn-sm" onclick="SupplierDash.changeOrderStatus('${orderId}','completed');App.closeModal('orderDetailModal');">Mark Completed</button>` : ''}
+              <button type="button" class="btn btn-ghost btn-sm" onclick="SupplierDash.addComment('${orderId}')">Add Comment</button>
+            </div>
+          </div>` : ''}
+        `;
+
+        // Scroll negotiation thread to bottom
+        const thread = document.getElementById('negThread');
+        if (thread) thread.scrollTop = thread.scrollHeight;
+
+        App.openModal('orderDetailModal');
+      },
+
+      async sendQuote(e, orderId) {
+        e.preventDefault();
+        const price = document.getElementById('quotePrice').value;
+        const delivery = document.getElementById('quoteDelivery').value.trim();
+        const message = document.getElementById('quoteMessage').value.trim();
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'quote',
+          quoted_price: parseFloat(price),
+          delivery_estimate: delivery || null,
+          message: message || null
+        });
+        if (result) {
+          App.showToast('Quote sent successfully!', 'success');
+          await this.openOrderDetail(orderId);
+          await this.renderOrders();
+          await this.renderOverview();
+        }
+      },
+
+      async addComment(orderId) {
+        const message = prompt('Enter your comment:');
+        if (!message || !message.trim()) return;
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'comment',
+          message: message.trim()
+        });
+        if (result) {
+          App.showToast('Comment added.', 'success');
+          await this.openOrderDetail(orderId);
+        }
       },
 
       async handleProductForm(e) {
