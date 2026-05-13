@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const PDFDocument = require('pdfkit');
 const db = require('./db/connection');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDoc = require('./swagger.json');
@@ -302,6 +303,264 @@ app.get('/api/orders/:id/messages', authenticate, async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Purchase Order PDF ──
+function formatINR(num) {
+  const n = Number(num);
+  if (isNaN(n)) return '₹0';
+  const s = n.toFixed(2);
+  const [whole, dec] = s.split('.');
+  // Indian grouping: last 3 digits, then groups of 2
+  let result = '';
+  const len = whole.length;
+  if (len <= 3) {
+    result = whole;
+  } else {
+    result = whole.slice(-3);
+    let remaining = whole.slice(0, -3);
+    while (remaining.length > 2) {
+      result = remaining.slice(-2) + ',' + result;
+      remaining = remaining.slice(0, -2);
+    }
+    if (remaining.length > 0) result = remaining + ',' + result;
+  }
+  return '₹' + result;
+}
+
+app.get('/api/orders/:id/po', authenticate, async (req, res) => {
+  try {
+    // 1. Fetch order + buyer info
+    const orderResult = await db.query(
+      `SELECT o.*, u.name AS buyer_name, u.email AS buyer_email, u.phone AS buyer_phone, u.company AS buyer_company
+       FROM orders o JOIN users u ON o.buyer_id = u.id WHERE o.id = $1`,
+      [req.params.id]
+    );
+    if (orderResult.rows.length === 0) return res.status(404).json({ error: 'Order not found' });
+    const order = orderResult.rows[0];
+
+    // 2. Access control
+    if (req.user.role === 'buyer' && order.buyer_id !== req.user.id) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    // 3. Status guard
+    const allowedStatuses = ['po_issued', 'in-progress', 'completed'];
+    if (!allowedStatuses.includes(order.status)) {
+      return res.status(400).json({ error: 'PO can only be downloaded for orders with status: ' + allowedStatuses.join(', ') });
+    }
+
+    // 4. Fetch order items
+    const itemsResult = await db.query('SELECT * FROM order_items WHERE order_id = $1', [req.params.id]);
+    const items = itemsResult.rows;
+
+    // 5. Fetch agreed price from latest quoted_price message, fallback to total_value
+    const priceResult = await db.query(
+      `SELECT quoted_price FROM order_messages WHERE order_id = $1 AND type IN ('quote','counter_offer','acceptance') AND quoted_price IS NOT NULL ORDER BY created_at DESC LIMIT 1`,
+      [req.params.id]
+    );
+    const agreedTotal = priceResult.rows.length > 0 ? Number(priceResult.rows[0].quoted_price) : Number(order.total_value || 0);
+
+    // 6. Fetch delivery estimate
+    const deliveryResult = await db.query(
+      `SELECT delivery_estimate FROM order_messages WHERE order_id = $1 AND delivery_estimate IS NOT NULL ORDER BY created_at DESC LIMIT 1`,
+      [req.params.id]
+    );
+    const deliveryEstimate = deliveryResult.rows.length > 0 ? deliveryResult.rows[0].delivery_estimate : 'As mutually agreed';
+
+    // 7. Generate PDF
+    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="PO-${order.id}.pdf"`);
+    doc.pipe(res);
+
+    const pageWidth = doc.page.width - 100; // 50pt margins each side
+    const leftCol = 50;
+    const rightCol = 310;
+
+    // ── Header ──
+    doc.fontSize(20).font('Helvetica-Bold').text('PURCHASE ORDER', leftCol, 50);
+    doc.fontSize(10).font('Helvetica').text(`PO Number: ${order.id}`, rightCol, 50, { align: 'right', width: pageWidth - 260 });
+    doc.text(`Date: ${dateStr}`, rightCol, 65, { align: 'right', width: pageWidth - 260 });
+
+    // Divider
+    doc.moveTo(leftCol, 90).lineTo(leftCol + pageWidth, 90).lineWidth(1).stroke('#333333');
+
+    // ── Supplier & Buyer columns ──
+    let y = 100;
+    doc.fontSize(9).font('Helvetica-Bold').fillColor('#888888').text('SUPPLIER', leftCol, y);
+    doc.text('BUYER', rightCol, y);
+
+    y += 16;
+    doc.fontSize(11).font('Helvetica-Bold').fillColor('#000000').text('HIMALAYA ENTERPRISES', leftCol, y);
+    doc.text(order.buyer_company || order.buyer_name, rightCol, y);
+
+    y += 16;
+    doc.fontSize(9).font('Helvetica').fillColor('#333333');
+    doc.text('Prop: Rajesh Kumar', leftCol, y);
+    doc.text(order.buyer_name, rightCol, y);
+
+    y += 14;
+    doc.text('Kanhauli, Phulwari Sharif', leftCol, y);
+    doc.text(order.buyer_email, rightCol, y);
+
+    y += 14;
+    doc.text('Patna - 801505 (Bihar)', leftCol, y);
+    doc.text(order.buyer_phone || '', rightCol, y);
+
+    y += 14;
+    doc.text('Ph: +91 98765 43210', leftCol, y);
+
+    y += 14;
+    doc.fontSize(8).fillColor('#666666').text('All type of Automobile Body', leftCol, y);
+    y += 12;
+    doc.text('Building, Repairing & Fabrication', leftCol, y);
+
+    // Divider
+    y += 20;
+    doc.moveTo(leftCol, y).lineTo(leftCol + pageWidth, y).lineWidth(0.5).stroke('#333333');
+
+    // ── Order Details ──
+    y += 12;
+    doc.fontSize(11).font('Helvetica-Bold').fillColor('#000000').text('ORDER DETAILS', leftCol, y);
+    y += 18;
+    doc.fontSize(9).font('Helvetica').fillColor('#333333');
+    const orderType = order.type === 'rfq' ? 'RFQ' : 'Inquiry';
+    doc.text(`Order Type: ${orderType}    |    Delivery: ${deliveryEstimate}`, leftCol, y);
+    if (order.notes) {
+      y += 14;
+      doc.text(`Notes: ${order.notes.substring(0, 200)}`, leftCol, y, { width: pageWidth });
+      y += doc.heightOfString(`Notes: ${order.notes.substring(0, 200)}`, { width: pageWidth });
+    } else {
+      y += 14;
+    }
+
+    // ── Items Table ──
+    y += 10;
+    const colWidths = { sno: 35, name: 140, specs: 110, qty: 40, unitPrice: 85, total: 85 };
+    const tableX = leftCol;
+    const tableWidth = colWidths.sno + colWidths.name + colWidths.specs + colWidths.qty + colWidths.unitPrice + colWidths.total;
+
+    // Table header background
+    doc.rect(tableX, y, tableWidth, 22).fill('#f0f0f0');
+    doc.fillColor('#333333').fontSize(8).font('Helvetica-Bold');
+    let cx = tableX + 4;
+    doc.text('S.No', cx, y + 6, { width: colWidths.sno - 8 });
+    cx += colWidths.sno;
+    doc.text('Item', cx, y + 6, { width: colWidths.name - 8 });
+    cx += colWidths.name;
+    doc.text('Specs', cx, y + 6, { width: colWidths.specs - 8 });
+    cx += colWidths.specs;
+    doc.text('Qty', cx, y + 6, { width: colWidths.qty - 8 });
+    cx += colWidths.qty;
+    doc.text('Unit Price', cx, y + 6, { width: colWidths.unitPrice - 8 });
+    cx += colWidths.unitPrice;
+    doc.text('Total', cx, y + 6, { width: colWidths.total - 8 });
+
+    y += 22;
+    doc.font('Helvetica').fontSize(8).fillColor('#000000');
+
+    items.forEach((item, idx) => {
+      // Page break if near bottom
+      if (y > 650) {
+        doc.addPage();
+        y = 50;
+      }
+      const unitPrice = Number(item.price || 0);
+      const qty = Number(item.quantity || 1);
+      const lineTotal = unitPrice * qty;
+      const specs = (item.specs || '-').substring(0, 50);
+      const rowH = 20;
+
+      // Alternating row background
+      if (idx % 2 === 1) {
+        doc.rect(tableX, y, tableWidth, rowH).fill('#fafafa');
+        doc.fillColor('#000000');
+      }
+
+      cx = tableX + 4;
+      doc.text(String(idx + 1), cx, y + 5, { width: colWidths.sno - 8 });
+      cx += colWidths.sno;
+      doc.text(item.name || '-', cx, y + 5, { width: colWidths.name - 8 });
+      cx += colWidths.name;
+      doc.text(specs, cx, y + 5, { width: colWidths.specs - 8 });
+      cx += colWidths.specs;
+      doc.text(String(qty), cx, y + 5, { width: colWidths.qty - 8 });
+      cx += colWidths.qty;
+      doc.text(formatINR(unitPrice), cx, y + 5, { width: colWidths.unitPrice - 8 });
+      cx += colWidths.unitPrice;
+      doc.text(formatINR(lineTotal), cx, y + 5, { width: colWidths.total - 8 });
+
+      y += rowH;
+    });
+
+    // Table bottom border
+    doc.moveTo(tableX, y).lineTo(tableX + tableWidth, y).lineWidth(0.5).stroke('#cccccc');
+
+    // Agreed total
+    y += 10;
+    doc.fontSize(10).font('Helvetica-Bold').fillColor('#000000');
+    doc.text(`Agreed Total: ${formatINR(agreedTotal)}`, tableX + tableWidth - 200, y, { width: 200, align: 'right' });
+
+    // Divider
+    y += 25;
+    doc.moveTo(leftCol, y).lineTo(leftCol + pageWidth, y).lineWidth(0.5).stroke('#333333');
+
+    // ── Terms & Conditions ──
+    y += 12;
+    doc.fontSize(11).font('Helvetica-Bold').fillColor('#000000').text('TERMS & CONDITIONS', leftCol, y);
+    y += 18;
+    doc.fontSize(8).font('Helvetica').fillColor('#333333');
+    const terms = [
+      'Payment: 50% advance, 50% on delivery',
+      'Warranty: 12 months against manufacturing defects',
+      'Prices inclusive of fabrication; transport extra',
+      'Delivery subject to material availability',
+      'Disputes subject to Patna jurisdiction',
+      'PO valid for 30 days from date of issue'
+    ];
+    terms.forEach((t, i) => {
+      if (y > 720) { doc.addPage(); y = 50; }
+      doc.text(`${i + 1}. ${t}`, leftCol, y, { width: pageWidth });
+      y += 14;
+    });
+
+    // Divider
+    y += 8;
+    doc.moveTo(leftCol, y).lineTo(leftCol + pageWidth, y).lineWidth(0.5).stroke('#333333');
+
+    // ── Signature block ──
+    y += 20;
+    if (y > 680) { doc.addPage(); y = 50; }
+    doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
+    doc.text('For HIMALAYA ENTERPRISES', leftCol, y);
+    doc.text('Accepted by Buyer', rightCol, y);
+
+    y += 40;
+    doc.moveTo(leftCol, y).lineTo(leftCol + 150, y).lineWidth(0.5).stroke('#000000');
+    doc.moveTo(rightCol, y).lineTo(rightCol + 150, y).lineWidth(0.5).stroke('#000000');
+
+    y += 6;
+    doc.fontSize(8).font('Helvetica').fillColor('#666666');
+    doc.text('Authorised Signatory', leftCol, y);
+    doc.text('Signature & Stamp', rightCol, y);
+
+    // Footer
+    y += 30;
+    doc.fontSize(7).fillColor('#999999').text(
+      `Generated on ${today.toLocaleString('en-IN')} | Computer-generated document`,
+      leftCol, y, { width: pageWidth, align: 'center' }
+    );
+
+    doc.end();
+  } catch (err) {
+    if (!res.headersSent) {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
 

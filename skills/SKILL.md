@@ -162,6 +162,8 @@ Any automobile body customization on demand.
 - Track order history with status timeline (Pending → Confirmed → In Progress → Completed)
 - View and manage saved/favorite products
 - See order summary and total values
+- Issue Purchase Orders and download PO as PDF
+- Download PO PDF for any order with status po_issued, in-progress, or completed
 
 ### 6. Supplier Dashboard (`pages/supplier.html`)
 
@@ -173,6 +175,7 @@ Any automobile body customization on demand.
 - View and manage incoming inquiries and RFQs
 - Update order status (Pending → Confirmed → In Progress → Completed)
 - View analytics overview (total products, pending orders, revenue, total inquiries)
+- Download Purchase Order PDF for orders with status po_issued, in-progress, or completed
 
 ---
 
@@ -264,11 +267,17 @@ Inquiry submitted → Status: Pending
     ↓
 Supplier reviews inquiry in dashboard
     ↓
-Supplier confirms → Status: Confirmed
+Supplier sends quote → Buyer negotiates (counter-offers) → Agreement
+    ↓
+Buyer accepts quote → Status: Accepted
+    ↓
+Buyer issues Purchase Order → Status: PO Issued → PDF auto-downloads
     ↓
 Manufacturing begins → Status: In Progress
     ↓
 Product delivered → Status: Completed
+
+Both buyer and supplier can download the PO PDF at any time after issuance.
 ```
 
 ---

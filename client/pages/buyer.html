@@ -485,6 +485,14 @@
             <p style="font-size:0.9rem;margin-bottom:12px;"><strong>Quote accepted at ${App.formatCurrency(order.totalValue || order.latestQuote || 0)}.</strong> Issue a Purchase Order to proceed.</p>
             <button class="btn btn-primary" onclick="BuyerDash.issuePO('${orderId}')">Issue Purchase Order</button>
           </div>` : ''}
+
+          ${['po_issued', 'in-progress', 'completed'].includes(order.status) ? `
+          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <p style="font-size:0.9rem;"><strong>Purchase Order Value:</strong> ${App.formatCurrency(order.totalValue || order.latestQuote || 0)}</p>
+              <button class="btn btn-primary btn-sm" onclick="BuyerDash.downloadPO('${orderId}')">&#128196; Download PO</button>
+            </div>
+          </div>` : ''}
         `;
 
         const thread = document.getElementById('buyerNegThread');
@@ -543,9 +551,33 @@
         if (!confirm('Issue a Purchase Order for this order?')) return;
         await Cart.updateOrderStatus(orderId, 'po_issued');
         App.showToast('Purchase Order issued!', 'success');
+        await this.downloadPO(orderId);
         await this.openOrderDetail(orderId);
         await this.renderOrders();
         await this.renderOverview();
+      },
+
+      async downloadPO(orderId) {
+        try {
+          const res = await fetch(API.BASE + '/orders/' + orderId + '/po', {
+            headers: { 'Authorization': 'Bearer ' + API.token }
+          });
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || res.statusText);
+          }
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'PO-' + orderId + '.pdf';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+        } catch (err) {
+          App.showToast('Failed to download PO: ' + err.message, 'error');
+        }
       },
 
       renderFavorites() {

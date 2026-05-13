@@ -185,6 +185,7 @@ Set these in `/opt/himalaya/.env` on the VPS:
 | POST | `/api/orders` | Yes | Place order |
 | GET | `/api/orders/:id` | Yes | Single order detail (buyer info, items, latest quote, message count) |
 | GET | `/api/orders/:id/messages` | Yes | Negotiation thread (all messages ordered by created_at) |
+| GET | `/api/orders/:id/po` | Yes | Download Purchase Order PDF (only for po_issued/in-progress/completed) |
 | POST | `/api/orders/:id/messages` | Yes | Send quote/counter-offer/comment/acceptance/rejection |
 | PATCH | `/api/orders/:id/status` | Yes | Update order status (supplier: any valid; buyer: po_issued, cancelled) |
 | GET | `/api/favorites` | Yes | List user favorites |
@@ -265,3 +266,4 @@ sshpass -p '<VPS_PASSWORD>' ssh -o StrictHostKeyChecking=no -o PreferredAuthenti
 | pg (node-postgres) | ^8.12.0 |
 | bcryptjs | ^2.4.3 |
 | jsonwebtoken | ^9.0.2 |
+| pdfkit | ^0.15.0 |
