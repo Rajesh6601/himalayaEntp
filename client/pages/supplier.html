@@ -259,22 +259,22 @@
           .reduce((sum, o) => sum + o.items.reduce((s, i) => s + (i.price || 0), 0), 0);
 
         document.getElementById('supplierStats').innerHTML = `
-          <div class="stat-card">
+          <div class="stat-card" style="border-left-color:var(--blue);">
             <div class="stat-icon" style="background:rgba(9,132,227,0.1);color:var(--blue);">&#128230;</div>
             <h3>${products.length}</h3>
             <p>Total Products</p>
           </div>
-          <div class="stat-card">
+          <div class="stat-card" style="border-left-color:#e67e22;">
             <div class="stat-icon" style="background:rgba(253,203,110,0.2);color:#e67e22;">&#128203;</div>
             <h3>${pending}</h3>
             <p>Pending Orders</p>
           </div>
-          <div class="stat-card">
+          <div class="stat-card" style="border-left-color:var(--green);">
             <div class="stat-icon" style="background:rgba(0,184,148,0.1);color:var(--green);">&#128176;</div>
             <h3>${App.formatCurrency(totalRevenue)}</h3>
             <p>Revenue (Completed)</p>
           </div>
-          <div class="stat-card">
+          <div class="stat-card" style="border-left-color:var(--primary);">
             <div class="stat-icon" style="background:rgba(212,56,13,0.1);color:var(--primary);">&#128200;</div>
             <h3>${orders.length}</h3>
             <p>Total Inquiries</p>
@@ -434,7 +434,7 @@
 
           <!-- Quoting Panel -->
           ${canQuote ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);">
+          <div class="action-panel">
             <h4 style="font-size:0.9rem;margin-bottom:12px;">${isPending ? 'Send Quote' : 'Send Revised Quote'}</h4>
             <form onsubmit="SupplierDash.sendQuote(event, '${orderId}')">
               <div class="form-row">
@@ -460,7 +460,7 @@
 
           <!-- Production Status -->
           ${canProgress ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+          <div class="action-panel" style="margin-top:12px;">
             <h4 style="font-size:0.9rem;margin-bottom:12px;">Update Production Status</h4>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
               ${['accepted', 'po_issued', 'advance_paid'].includes(order.status) ? `<button class="btn btn-primary btn-sm" onclick="SupplierDash.changeOrderStatus('${orderId}','in-progress');App.closeModal('orderDetailModal');">Start Production</button>` : ''}
@@ -470,7 +470,7 @@
 
           <!-- Create Invoice -->
           ${canCreateInvoice ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+          <div class="action-panel" style="margin-top:12px;">
             <h4 style="font-size:0.9rem;margin-bottom:12px;">Create Invoice</h4>
             <form onsubmit="SupplierDash.createInvoice(event, '${orderId}')">
               <div class="form-row">
@@ -497,7 +497,7 @@
 
           <!-- Record Dispatch -->
           ${canDispatch ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+          <div class="action-panel" style="margin-top:12px;">
             <h4 style="font-size:0.9rem;margin-bottom:12px;">Record Dispatch</h4>
             <form onsubmit="SupplierDash.recordDispatch(event, '${orderId}')">
               <div class="form-row">
@@ -520,7 +520,7 @@
 
           <!-- Dispute Response -->
           ${order.status === 'disputed' ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+          <div class="action-panel" style="margin-top:12px;">
             <h4 style="font-size:0.9rem;margin-bottom:12px;">Dispute Response</h4>
             <div class="form-group">
               <label>Response</label>
@@ -534,7 +534,7 @@
 
           <!-- PO Download -->
           ${poStatuses.includes(order.status) ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+          <div class="action-panel" style="margin-top:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <p style="font-size:0.9rem;"><strong>Purchase Order Value:</strong> ${App.formatCurrency(order.totalValue || order.latestQuote || 0)}</p>
               <button class="btn btn-primary btn-sm" onclick="SupplierDash.downloadPO('${orderId}')">&#128196; Download PO</button>
@@ -543,7 +543,7 @@
 
           <!-- Invoice Download -->
           ${order.invoice ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+          <div class="action-panel" style="margin-top:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
               <div>
                 <p style="font-size:0.9rem;"><strong>Invoice:</strong> ${order.invoice.invoice_number}</p>

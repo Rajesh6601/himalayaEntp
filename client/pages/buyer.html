@@ -255,22 +255,22 @@
         const favs = Cart.getFavorites();
 
         document.getElementById('buyerStats').innerHTML = `
-          <div class="stat-card">
+          <div class="stat-card" style="border-left-color:var(--blue);">
             <div class="stat-icon" style="background:rgba(9,132,227,0.1);color:var(--blue);">&#128722;</div>
             <h3>${cart.length}</h3>
             <p>Items in Basket</p>
           </div>
-          <div class="stat-card">
+          <div class="stat-card" style="border-left-color:#e67e22;">
             <div class="stat-icon" style="background:rgba(253,203,110,0.2);color:#e67e22;">&#128203;</div>
             <h3>${orders.length}</h3>
             <p>Total Orders</p>
           </div>
-          <div class="stat-card">
+          <div class="stat-card" style="border-left-color:var(--green);">
             <div class="stat-icon" style="background:rgba(0,184,148,0.1);color:var(--green);">&#10003;</div>
             <h3>${orders.filter(o => o.status === 'completed').length}</h3>
             <p>Completed</p>
           </div>
-          <div class="stat-card">
+          <div class="stat-card" style="border-left-color:var(--primary);">
             <div class="stat-icon" style="background:rgba(212,56,13,0.1);color:var(--primary);">&#10084;</div>
             <h3>${favs.length}</h3>
             <p>Saved Products</p>
@@ -469,7 +469,7 @@
 
           <!-- Negotiation Actions -->
           ${canAct ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);">
+          <div class="action-panel">
             <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
               <button class="btn btn-success btn-sm" onclick="BuyerDash.acceptQuote('${orderId}', ${order.latestQuote || 0})">Accept Quote</button>
               <button class="btn btn-danger btn-sm" onclick="BuyerDash.rejectQuote('${orderId}')">Reject</button>
@@ -492,14 +492,14 @@
 
           <!-- Issue PO -->
           ${isAccepted ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);">
+          <div class="action-panel">
             <p style="font-size:0.9rem;margin-bottom:12px;"><strong>Quote accepted at ${App.formatCurrency(order.totalValue || order.latestQuote || 0)}.</strong> Issue a Purchase Order to proceed.</p>
             <button class="btn btn-primary" onclick="BuyerDash.issuePO('${orderId}')">Issue Purchase Order</button>
           </div>` : ''}
 
           <!-- Advance Payment -->
           ${order.status === 'po_issued' ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+          <div class="action-panel" style="margin-top:12px;">
             <h4 style="font-size:0.9rem;margin-bottom:12px;">Confirm Advance Payment</h4>
             <form onsubmit="BuyerDash.confirmAdvancePayment(event, '${orderId}')">
               <div class="form-row">
@@ -518,7 +518,7 @@
 
           <!-- GRN Recording -->
           ${order.status === 'dispatched' ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+          <div class="action-panel" style="margin-top:12px;">
             <h4 style="font-size:0.9rem;margin-bottom:12px;">Record Goods Receipt (GRN)</h4>
             <form onsubmit="BuyerDash.recordGRN(event, '${orderId}')">
               <div class="form-row">
@@ -545,7 +545,7 @@
 
           <!-- Quality Inspection -->
           ${order.status === 'delivered' ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+          <div class="action-panel" style="margin-top:12px;">
             <h4 style="font-size:0.9rem;margin-bottom:12px;">Quality Inspection</h4>
             <div class="form-group">
               <label>Inspection Remarks</label>
@@ -559,7 +559,7 @@
 
           <!-- Balance Payment -->
           ${order.status === 'qc_approved' ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+          <div class="action-panel" style="margin-top:12px;">
             <h4 style="font-size:0.9rem;margin-bottom:12px;">Release Balance Payment</h4>
             <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">
               Advance Paid: ${App.formatCurrency(order.advancePaid)} |
@@ -582,7 +582,7 @@
 
           <!-- PO Download -->
           ${poStatuses.includes(order.status) ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+          <div class="action-panel" style="margin-top:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <p style="font-size:0.9rem;"><strong>Purchase Order Value:</strong> ${App.formatCurrency(order.totalValue || order.latestQuote || 0)}</p>
               <button class="btn btn-primary btn-sm" onclick="BuyerDash.downloadPO('${orderId}')">&#128196; Download PO</button>
@@ -591,7 +591,7 @@
 
           <!-- Invoice Download -->
           ${order.invoice ? `
-          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+          <div class="action-panel" style="margin-top:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
               <div>
                 <p style="font-size:0.9rem;"><strong>Invoice:</strong> ${order.invoice.invoice_number}</p>
