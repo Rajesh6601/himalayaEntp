@@ -317,6 +317,9 @@ const Cart = {
         totalValue: Number(o.total_value || 0),
         latestQuote: o.latest_quote,
         messageCount: o.message_count,
+        advancePaid: Number(o.advance_paid || 0),
+        balancePaid: Number(o.balance_paid || 0),
+        invoice: o.invoice || null,
         createdAt: o.created_at,
         updatedAt: o.updated_at
       };
@@ -365,37 +368,65 @@ const Cart = {
       negotiating: '<span class="badge badge-purple">Negotiating</span>',
       accepted: '<span class="badge badge-green">Accepted</span>',
       po_issued: '<span class="badge badge-green">PO Issued</span>',
+      advance_paid: '<span class="badge badge-green">Advance Paid</span>',
       confirmed: '<span class="badge badge-blue">Confirmed</span>',
       'in-progress': '<span class="badge badge-blue">In Progress</span>',
+      invoiced: '<span class="badge badge-blue">Invoiced</span>',
+      dispatched: '<span class="badge badge-purple">Dispatched</span>',
+      delivered: '<span class="badge badge-purple">Delivered</span>',
+      qc_approved: '<span class="badge badge-green">QC Approved</span>',
       completed: '<span class="badge badge-green">Completed</span>',
-      cancelled: '<span class="badge badge-red">Cancelled</span>'
+      cancelled: '<span class="badge badge-red">Cancelled</span>',
+      disputed: '<span class="badge badge-orange">Disputed</span>'
     };
     return labels[status] || status;
   },
 
   renderStatusTimeline(status) {
-    const steps = [
+    const row1 = [
       { key: 'pending', label: 'Submitted' },
       { key: 'quoted', label: 'Quoted' },
-      { key: 'negotiating', label: 'Negotiating' },
       { key: 'accepted', label: 'Accepted' },
-      { key: 'po_issued', label: 'PO Issued' },
+      { key: 'po_issued', label: 'PO Issued' }
+    ];
+    const row2 = [
+      { key: 'advance_paid', label: 'Advance Paid' },
       { key: 'in-progress', label: 'In Progress' },
+      { key: 'invoiced', label: 'Invoiced' },
+      { key: 'dispatched', label: 'Dispatched' },
+      { key: 'delivered', label: 'Delivered' },
+      { key: 'qc_approved', label: 'QC Approved' },
       { key: 'completed', label: 'Completed' }
     ];
-    const statusOrder = steps.map(s => s.key);
-    let currentIdx = statusOrder.indexOf(status);
-    // Map confirmed to in-progress position for display
-    if (status === 'confirmed') currentIdx = statusOrder.indexOf('in-progress');
-    if (status === 'cancelled') currentIdx = -1;
-    return `<div class="status-timeline">
-      ${steps.map((s, i) => `
-        <div class="status-step">
-          <div class="status-dot ${i < currentIdx ? 'completed' : ''} ${i === currentIdx ? 'current' : ''} ${status === 'cancelled' && i === 0 ? 'current' : ''}"></div>
-          <span class="status-label">${s.label}</span>
-        </div>
-        ${i < steps.length - 1 ? `<div class="status-line ${i < currentIdx ? 'completed' : ''}"></div>` : ''}
-      `).join('')}
+    const allSteps = [...row1, ...row2];
+    const allKeys = allSteps.map(s => s.key);
+
+    let currentIdx = allKeys.indexOf(status);
+    if (status === 'negotiating') currentIdx = allKeys.indexOf('quoted');
+    if (status === 'confirmed') currentIdx = allKeys.indexOf('in-progress');
+    if (status === 'cancelled' || status === 'disputed') currentIdx = -1;
+
+    function renderRow(steps, offset) {
+      return steps.map((s, i) => {
+        const globalIdx = offset + i;
+        return `
+          <div class="status-step">
+            <div class="status-dot ${globalIdx < currentIdx ? 'completed' : ''} ${globalIdx === currentIdx ? 'current' : ''}"></div>
+            <span class="status-label">${s.label}</span>
+          </div>
+          ${i < steps.length - 1 ? `<div class="status-line ${globalIdx < currentIdx ? 'completed' : ''}"></div>` : ''}
+        `;
+      }).join('');
+    }
+
+    let extra = '';
+    if (status === 'cancelled') extra = '<div style="margin-top:6px;"><span class="badge badge-red">Cancelled</span></div>';
+    if (status === 'disputed') extra = '<div style="margin-top:6px;"><span class="badge badge-orange">Disputed</span></div>';
+
+    return `<div class="status-timeline-wrap">
+      <div class="status-timeline">${renderRow(row1, 0)}</div>
+      <div class="status-timeline" style="margin-top:6px;">${renderRow(row2, row1.length)}</div>
+      ${extra}
     </div>`;
   }
 };

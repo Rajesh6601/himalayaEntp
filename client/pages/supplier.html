@@ -361,11 +361,24 @@
         const isNegotiating = order.status === 'negotiating';
         const isQuoted = order.status === 'quoted';
         const canQuote = isPending || isNegotiating || isQuoted;
-        const isAccepted = order.status === 'accepted' || order.status === 'po_issued';
+        const isAccepted = order.status === 'accepted' || order.status === 'po_issued' || order.status === 'advance_paid';
         const canProgress = isAccepted || order.status === 'confirmed' || order.status === 'in-progress';
 
+        const typeLabels = {
+          quote: 'Quote', counter_offer: 'Counter-Offer', comment: 'Comment',
+          acceptance: 'Accepted', rejection: 'Rejected',
+          advance_payment: 'Advance Payment', invoice: 'Invoice Created',
+          dispatch: 'Dispatched', grn: 'GRN Recorded',
+          qc_approved: 'QC Approved', qc_rejected: 'QC Rejected',
+          balance_payment: 'Balance Payment', dispute_response: 'Dispute Response'
+        };
+
+        const poStatuses = ['po_issued', 'advance_paid', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed'];
+        const canCreateInvoice = ['po_issued', 'advance_paid', 'in-progress'].includes(order.status) && !order.invoice;
+        const canDispatch = ['invoiced', 'in-progress'].includes(order.status);
+
         body.innerHTML = `
-          <!-- RFQ Info -->
+          <!-- Buyer Info -->
           <div style="margin-bottom:20px;">
             <h4 style="font-size:0.9rem;margin-bottom:12px;">Buyer Information</h4>
             <div class="order-info-grid">
@@ -397,14 +410,13 @@
             ${order.latestQuote ? `<p style="margin-top:8px;font-size:0.9rem;"><strong>Latest quoted price:</strong> ${App.formatCurrency(order.latestQuote)}</p>` : ''}
           </div>
 
-          <!-- Negotiation Thread -->
+          <!-- Order Thread -->
           <div style="margin-bottom:20px;">
-            <h4 style="font-size:0.9rem;margin-bottom:8px;">Negotiation Thread (${messages.length} messages)</h4>
+            <h4 style="font-size:0.9rem;margin-bottom:8px;">Order Thread (${messages.length} messages)</h4>
             <div class="negotiation-thread" id="negThread">
               ${messages.length === 0 ? '<p style="text-align:center;color:var(--text-muted);padding:20px;">No messages yet. Send a quote to start the negotiation.</p>' :
                 messages.map(m => {
                   const isSent = m.senderRole === 'supplier' || m.senderRole === 'admin';
-                  const typeLabels = { quote: 'Quote', counter_offer: 'Counter-Offer', comment: 'Comment', acceptance: 'Accepted', rejection: 'Rejected' };
                   return `<div class="neg-message ${isSent ? 'sent' : 'received'}">
                     <span class="neg-type-badge">${typeLabels[m.type] || m.type}</span>
                     ${m.quotedPrice ? `<div class="neg-price">${App.formatCurrency(m.quotedPrice)}</div>` : ''}
@@ -420,7 +432,7 @@
             </div>
           </div>
 
-          <!-- Action Panel -->
+          <!-- Quoting Panel -->
           ${canQuote ? `
           <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);">
             <h4 style="font-size:0.9rem;margin-bottom:12px;">${isPending ? 'Send Quote' : 'Send Revised Quote'}</h4>
@@ -446,26 +458,103 @@
             </form>
           </div>` : ''}
 
+          <!-- Production Status -->
           ${canProgress ? `
           <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
             <h4 style="font-size:0.9rem;margin-bottom:12px;">Update Production Status</h4>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              ${order.status === 'accepted' || order.status === 'po_issued' ? `<button class="btn btn-primary btn-sm" onclick="SupplierDash.changeOrderStatus('${orderId}','in-progress');App.closeModal('orderDetailModal');">Start Production</button>` : ''}
-              ${order.status === 'in-progress' ? `<button class="btn btn-success btn-sm" onclick="SupplierDash.changeOrderStatus('${orderId}','completed');App.closeModal('orderDetailModal');">Mark Completed</button>` : ''}
+              ${['accepted', 'po_issued', 'advance_paid'].includes(order.status) ? `<button class="btn btn-primary btn-sm" onclick="SupplierDash.changeOrderStatus('${orderId}','in-progress');App.closeModal('orderDetailModal');">Start Production</button>` : ''}
               <button type="button" class="btn btn-ghost btn-sm" onclick="SupplierDash.addComment('${orderId}')">Add Comment</button>
             </div>
           </div>` : ''}
 
-          ${['po_issued', 'in-progress', 'completed'].includes(order.status) ? `
+          <!-- Create Invoice -->
+          ${canCreateInvoice ? `
+          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">Create Invoice</h4>
+            <form onsubmit="SupplierDash.createInvoice(event, '${orderId}')">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Buyer GSTIN</label>
+                  <input type="text" id="invBuyerGstin" placeholder="e.g. 10AABCT1234A1ZA">
+                </div>
+                <div class="form-group">
+                  <label>Place of Supply</label>
+                  <select id="invPlaceOfSupply">
+                    <option value="Bihar">Bihar (Intra-state)</option>
+                    <option value="Jharkhand">Jharkhand (Inter-state)</option>
+                    <option value="Other">Other (Inter-state)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Notes / Payment Terms</label>
+                <input type="text" id="invNotes" placeholder="e.g. 50% advance, 50% on delivery after QC" value="50% advance, 50% on delivery after QC">
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">Generate Invoice</button>
+            </form>
+          </div>` : ''}
+
+          <!-- Record Dispatch -->
+          ${canDispatch ? `
+          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">Record Dispatch</h4>
+            <form onsubmit="SupplierDash.recordDispatch(event, '${orderId}')">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Dispatch Date *</label>
+                  <input type="date" id="dispatchDate" required value="${new Date().toISOString().split('T')[0]}">
+                </div>
+                <div class="form-group">
+                  <label>Vehicle / Challan No.</label>
+                  <input type="text" id="dispatchVehicle" placeholder="e.g. BR01AB1234">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Transporter / Remarks</label>
+                <input type="text" id="dispatchRemarks" placeholder="Transporter name, tracking info...">
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">Record Dispatch</button>
+            </form>
+          </div>` : ''}
+
+          <!-- Dispute Response -->
+          ${order.status === 'disputed' ? `
+          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">Dispute Response</h4>
+            <div class="form-group">
+              <label>Response</label>
+              <textarea id="disputeResponse" rows="3" placeholder="Explain resolution plan, rework details..."></textarea>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-primary btn-sm" onclick="SupplierDash.respondToDispute('${orderId}')">Send Response</button>
+              <button class="btn btn-ghost btn-sm" onclick="SupplierDash.changeOrderStatus('${orderId}','in-progress');App.closeModal('orderDetailModal');">Start Rework</button>
+            </div>
+          </div>` : ''}
+
+          <!-- PO Download -->
+          ${poStatuses.includes(order.status) ? `
           <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <p style="font-size:0.9rem;"><strong>Purchase Order Value:</strong> ${App.formatCurrency(order.totalValue || order.latestQuote || 0)}</p>
               <button class="btn btn-primary btn-sm" onclick="SupplierDash.downloadPO('${orderId}')">&#128196; Download PO</button>
             </div>
           </div>` : ''}
+
+          <!-- Invoice Download -->
+          ${order.invoice ? `
+          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+              <div>
+                <p style="font-size:0.9rem;"><strong>Invoice:</strong> ${order.invoice.invoice_number}</p>
+                <p style="font-size:0.83rem;color:var(--text-light);">Amount: ${App.formatCurrency(order.invoice.grand_total)} | Date: ${new Date(order.invoice.invoice_date).toLocaleDateString('en-IN')}</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="SupplierDash.downloadInvoice('${orderId}')">&#128196; Download Invoice</button>
+            </div>
+          </div>` : ''}
         `;
 
-        // Scroll negotiation thread to bottom
+        // Scroll thread to bottom
         const thread = document.getElementById('negThread');
         if (thread) thread.scrollTop = thread.scrollHeight;
 
@@ -604,6 +693,100 @@
           window.URL.revokeObjectURL(url);
         } catch (err) {
           App.showToast('Failed to download PO: ' + err.message, 'error');
+        }
+      },
+
+      async createInvoice(e, orderId) {
+        e.preventDefault();
+        const buyerGstin = document.getElementById('invBuyerGstin').value.trim();
+        const placeOfSupply = document.getElementById('invPlaceOfSupply').value;
+        const notes = document.getElementById('invNotes').value.trim();
+
+        // Determine tax rates based on place of supply
+        let cgstRate = 0, sgstRate = 0, igstRate = 0;
+        if (placeOfSupply === 'Bihar') {
+          cgstRate = 9;
+          sgstRate = 9;
+        } else {
+          igstRate = 18;
+        }
+
+        if (!confirm('Generate invoice for this order?')) return;
+
+        try {
+          const result = await API.post('/orders/' + orderId + '/invoice', {
+            buyer_gstin: buyerGstin || null,
+            place_of_supply: placeOfSupply,
+            cgst_rate: cgstRate,
+            sgst_rate: sgstRate,
+            igst_rate: igstRate,
+            payment_terms: notes || '50% advance, 50% on delivery after QC',
+            notes: notes || null,
+            items: []
+          });
+          App.showToast('Invoice ' + result.invoice_number + ' created!', 'success');
+          await this.openOrderDetail(orderId);
+          await this.renderOrders();
+          await this.renderOverview();
+        } catch (err) {
+          App.showToast('Failed to create invoice: ' + err.message, 'error');
+        }
+      },
+
+      async recordDispatch(e, orderId) {
+        e.preventDefault();
+        const date = document.getElementById('dispatchDate').value;
+        const vehicle = document.getElementById('dispatchVehicle').value.trim();
+        const remarks = document.getElementById('dispatchRemarks').value.trim();
+        if (!confirm('Record dispatch for this order?')) return;
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'dispatch',
+          message: 'Dispatched on ' + date + (vehicle ? '. Vehicle: ' + vehicle : '') + (remarks ? '. ' + remarks : '')
+        });
+        if (result) {
+          App.showToast('Dispatch recorded!', 'success');
+          await this.openOrderDetail(orderId);
+          await this.renderOrders();
+          await this.renderOverview();
+        }
+      },
+
+      async respondToDispute(orderId) {
+        const response = document.getElementById('disputeResponse')?.value.trim();
+        if (!response) {
+          App.showToast('Please enter a response.', 'warning');
+          return;
+        }
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'dispute_response',
+          message: response
+        });
+        if (result) {
+          App.showToast('Dispute response sent.', 'success');
+          await this.openOrderDetail(orderId);
+        }
+      },
+
+      async downloadInvoice(orderId) {
+        try {
+          const res = await fetch(API.BASE + '/orders/' + orderId + '/invoice', {
+            headers: { 'Authorization': 'Bearer ' + API.token }
+          });
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || res.statusText);
+          }
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'Invoice-' + orderId + '.pdf';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+        } catch (err) {
+          App.showToast('Failed to download invoice: ' + err.message, 'error');
         }
       },
 

@@ -61,7 +61,9 @@ CREATE TABLE orders (
     buyer_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     type        VARCHAR(10) NOT NULL CHECK (type IN ('inquiry', 'rfq')),
     status      VARCHAR(20) NOT NULL DEFAULT 'pending'
-                CHECK (status IN ('pending', 'quoted', 'negotiating', 'accepted', 'po_issued', 'confirmed', 'in-progress', 'completed', 'cancelled')),
+                CHECK (status IN ('pending', 'quoted', 'negotiating', 'accepted', 'po_issued', 'advance_paid', 'confirmed', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed', 'cancelled', 'disputed')),
+    advance_paid NUMERIC(14, 2) DEFAULT 0,
+    balance_paid NUMERIC(14, 2) DEFAULT 0,
     notes       TEXT,
     total_value NUMERIC(14, 2) DEFAULT 0,
     created_at  TIMESTAMPTZ DEFAULT NOW(),
@@ -93,7 +95,7 @@ CREATE TABLE order_messages (
     sender_id       UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     sender_role     VARCHAR(20) NOT NULL CHECK (sender_role IN ('buyer', 'supplier', 'admin')),
     type            VARCHAR(20) NOT NULL
-                    CHECK (type IN ('quote', 'counter_offer', 'comment', 'acceptance', 'rejection')),
+                    CHECK (type IN ('quote', 'counter_offer', 'comment', 'acceptance', 'rejection', 'advance_payment', 'invoice', 'dispatch', 'grn', 'qc_approved', 'qc_rejected', 'balance_payment', 'dispute_response')),
     quoted_price    NUMERIC(14, 2),
     delivery_estimate VARCHAR(100),
     message         TEXT,
@@ -101,6 +103,50 @@ CREATE TABLE order_messages (
 );
 
 CREATE INDEX idx_order_messages_order ON order_messages(order_id);
+
+-- ── Invoices ──
+CREATE TABLE invoices (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id        VARCHAR(30) NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    invoice_number  VARCHAR(30) NOT NULL UNIQUE,
+    invoice_date    DATE NOT NULL DEFAULT CURRENT_DATE,
+    due_date        DATE,
+    supplier_gstin  VARCHAR(20) DEFAULT '10AABCH1234A1ZA',
+    buyer_gstin     VARCHAR(20),
+    hsn_code        VARCHAR(10) DEFAULT '8707',
+    place_of_supply VARCHAR(50) DEFAULT 'Bihar',
+    subtotal        NUMERIC(14, 2) NOT NULL DEFAULT 0,
+    cgst_rate       NUMERIC(5, 2) DEFAULT 0,
+    cgst_amount     NUMERIC(14, 2) DEFAULT 0,
+    sgst_rate       NUMERIC(5, 2) DEFAULT 0,
+    sgst_amount     NUMERIC(14, 2) DEFAULT 0,
+    igst_rate       NUMERIC(5, 2) DEFAULT 0,
+    igst_amount     NUMERIC(14, 2) DEFAULT 0,
+    total_tax       NUMERIC(14, 2) DEFAULT 0,
+    grand_total     NUMERIC(14, 2) NOT NULL DEFAULT 0,
+    payment_terms   TEXT,
+    notes           TEXT,
+    status          VARCHAR(20) NOT NULL DEFAULT 'sent'
+                    CHECK (status IN ('draft', 'sent', 'paid', 'cancelled')),
+    created_by      UUID REFERENCES users(id),
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_invoices_order ON invoices(order_id);
+CREATE INDEX idx_invoices_number ON invoices(invoice_number);
+
+-- ── Invoice Items ──
+CREATE TABLE invoice_items (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    invoice_id      UUID NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+    description     VARCHAR(255) NOT NULL,
+    hsn_code        VARCHAR(10) DEFAULT '8707',
+    quantity        INTEGER NOT NULL DEFAULT 1,
+    unit_price      NUMERIC(14, 2) NOT NULL DEFAULT 0,
+    total           NUMERIC(14, 2) NOT NULL DEFAULT 0
+);
+
+CREATE INDEX idx_invoice_items_invoice ON invoice_items(invoice_id);
 
 -- ── Favorites ──
 CREATE TABLE favorites (

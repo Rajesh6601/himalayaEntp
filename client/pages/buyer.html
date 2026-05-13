@@ -416,6 +416,17 @@
         const canAct = isQuoted || isNegotiating;
         const isAccepted = order.status === 'accepted';
 
+        const typeLabels = {
+          quote: 'Quote', counter_offer: 'Counter-Offer', comment: 'Comment',
+          acceptance: 'Accepted', rejection: 'Rejected',
+          advance_payment: 'Advance Payment', invoice: 'Invoice Created',
+          dispatch: 'Dispatched', grn: 'GRN Recorded',
+          qc_approved: 'QC Approved', qc_rejected: 'QC Rejected',
+          balance_payment: 'Balance Payment', dispute_response: 'Dispute Response'
+        };
+
+        const poStatuses = ['po_issued', 'advance_paid', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed'];
+
         body.innerHTML = `
           <!-- Status & Items -->
           <div style="margin-bottom:20px;">
@@ -436,12 +447,11 @@
 
           <!-- Negotiation Thread -->
           <div style="margin-bottom:20px;">
-            <h4 style="font-size:0.9rem;margin-bottom:8px;">Negotiation Thread (${messages.length})</h4>
+            <h4 style="font-size:0.9rem;margin-bottom:8px;">Order Thread (${messages.length})</h4>
             <div class="negotiation-thread" id="buyerNegThread">
               ${messages.length === 0 ? '<p style="text-align:center;color:var(--text-muted);padding:20px;">No messages yet. Waiting for supplier quote.</p>' :
                 messages.map(m => {
                   const isSent = m.senderRole === 'buyer';
-                  const typeLabels = { quote: 'Quote', counter_offer: 'Counter-Offer', comment: 'Comment', acceptance: 'Accepted', rejection: 'Rejected' };
                   return `<div class="neg-message ${isSent ? 'sent' : 'received'}">
                     <span class="neg-type-badge">${typeLabels[m.type] || m.type}</span>
                     ${m.quotedPrice ? `<div class="neg-price">${App.formatCurrency(m.quotedPrice)}</div>` : ''}
@@ -457,7 +467,7 @@
             </div>
           </div>
 
-          <!-- Actions -->
+          <!-- Negotiation Actions -->
           ${canAct ? `
           <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);">
             <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
@@ -480,17 +490,114 @@
             </form>
           </div>` : ''}
 
+          <!-- Issue PO -->
           ${isAccepted ? `
           <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);">
             <p style="font-size:0.9rem;margin-bottom:12px;"><strong>Quote accepted at ${App.formatCurrency(order.totalValue || order.latestQuote || 0)}.</strong> Issue a Purchase Order to proceed.</p>
             <button class="btn btn-primary" onclick="BuyerDash.issuePO('${orderId}')">Issue Purchase Order</button>
           </div>` : ''}
 
-          ${['po_issued', 'in-progress', 'completed'].includes(order.status) ? `
+          <!-- Advance Payment -->
+          ${order.status === 'po_issued' ? `
+          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">Confirm Advance Payment</h4>
+            <form onsubmit="BuyerDash.confirmAdvancePayment(event, '${orderId}')">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Amount Paid (&#8377;) *</label>
+                  <input type="number" id="advanceAmount" min="0" step="0.01" required placeholder="e.g. ${Math.round((order.totalValue || order.latestQuote || 0) / 2)}">
+                </div>
+                <div class="form-group">
+                  <label>Payment Reference</label>
+                  <input type="text" id="advanceRef" placeholder="UTR / Transaction ID">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">Confirm Advance Payment</button>
+            </form>
+          </div>` : ''}
+
+          <!-- GRN Recording -->
+          ${order.status === 'dispatched' ? `
+          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">Record Goods Receipt (GRN)</h4>
+            <form onsubmit="BuyerDash.recordGRN(event, '${orderId}')">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Receipt Date *</label>
+                  <input type="date" id="grnDate" required value="${new Date().toISOString().split('T')[0]}">
+                </div>
+                <div class="form-group">
+                  <label>Condition</label>
+                  <select id="grnCondition">
+                    <option value="good">Good Condition</option>
+                    <option value="minor_damage">Minor Damage</option>
+                    <option value="damaged">Damaged</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Remarks</label>
+                <input type="text" id="grnRemarks" placeholder="Receiving notes...">
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">Confirm Receipt</button>
+            </form>
+          </div>` : ''}
+
+          <!-- Quality Inspection -->
+          ${order.status === 'delivered' ? `
+          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">Quality Inspection</h4>
+            <div class="form-group">
+              <label>Inspection Remarks</label>
+              <textarea id="qcRemarks" rows="2" placeholder="Quality check observations..."></textarea>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-success btn-sm" onclick="BuyerDash.approveQC('${orderId}')">Approve QC</button>
+              <button class="btn btn-danger btn-sm" onclick="BuyerDash.rejectQC('${orderId}')">Reject QC</button>
+            </div>
+          </div>` : ''}
+
+          <!-- Balance Payment -->
+          ${order.status === 'qc_approved' ? `
+          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">Release Balance Payment</h4>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">
+              Advance Paid: ${App.formatCurrency(order.advancePaid)} |
+              Balance Due: ${App.formatCurrency((order.totalValue || order.latestQuote || 0) - order.advancePaid)}
+            </p>
+            <form onsubmit="BuyerDash.confirmBalancePayment(event, '${orderId}')">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Amount Paid (&#8377;) *</label>
+                  <input type="number" id="balanceAmount" min="0" step="0.01" required placeholder="${Math.round((order.totalValue || order.latestQuote || 0) - order.advancePaid)}">
+                </div>
+                <div class="form-group">
+                  <label>Payment Reference</label>
+                  <input type="text" id="balanceRef" placeholder="UTR / Transaction ID">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">Confirm Balance Payment</button>
+            </form>
+          </div>` : ''}
+
+          <!-- PO Download -->
+          ${poStatuses.includes(order.status) ? `
           <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <p style="font-size:0.9rem;"><strong>Purchase Order Value:</strong> ${App.formatCurrency(order.totalValue || order.latestQuote || 0)}</p>
               <button class="btn btn-primary btn-sm" onclick="BuyerDash.downloadPO('${orderId}')">&#128196; Download PO</button>
+            </div>
+          </div>` : ''}
+
+          <!-- Invoice Download -->
+          ${order.invoice ? `
+          <div style="padding:16px;background:var(--bg-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+              <div>
+                <p style="font-size:0.9rem;"><strong>Invoice:</strong> ${order.invoice.invoice_number}</p>
+                <p style="font-size:0.83rem;color:var(--text-light);">Amount: ${App.formatCurrency(order.invoice.grand_total)} | Date: ${new Date(order.invoice.invoice_date).toLocaleDateString('en-IN')}</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="BuyerDash.downloadInvoice('${orderId}')">&#128196; Download Invoice</button>
             </div>
           </div>` : ''}
         `;
@@ -577,6 +684,117 @@
           window.URL.revokeObjectURL(url);
         } catch (err) {
           App.showToast('Failed to download PO: ' + err.message, 'error');
+        }
+      },
+
+      async confirmAdvancePayment(e, orderId) {
+        e.preventDefault();
+        const amount = document.getElementById('advanceAmount').value;
+        const ref = document.getElementById('advanceRef').value.trim();
+        if (!confirm('Confirm advance payment of ' + App.formatCurrency(parseFloat(amount)) + '?')) return;
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'advance_payment',
+          quoted_price: parseFloat(amount),
+          message: 'Advance payment confirmed.' + (ref ? ' Ref: ' + ref : '')
+        });
+        if (result) {
+          App.showToast('Advance payment recorded!', 'success');
+          await this.openOrderDetail(orderId);
+          await this.renderOrders();
+          await this.renderOverview();
+        }
+      },
+
+      async recordGRN(e, orderId) {
+        e.preventDefault();
+        const date = document.getElementById('grnDate').value;
+        const condition = document.getElementById('grnCondition').value;
+        const remarks = document.getElementById('grnRemarks').value.trim();
+        if (!confirm('Confirm goods receipt?')) return;
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'grn',
+          message: 'GRN recorded. Date: ' + date + ', Condition: ' + condition + (remarks ? '. ' + remarks : '')
+        });
+        if (result) {
+          App.showToast('Goods receipt recorded!', 'success');
+          await this.openOrderDetail(orderId);
+          await this.renderOrders();
+          await this.renderOverview();
+        }
+      },
+
+      async approveQC(orderId) {
+        const remarks = document.getElementById('qcRemarks')?.value.trim() || '';
+        if (!confirm('Approve quality check for this order?')) return;
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'qc_approved',
+          message: 'Quality inspection passed.' + (remarks ? ' Remarks: ' + remarks : '')
+        });
+        if (result) {
+          App.showToast('QC Approved!', 'success');
+          await this.openOrderDetail(orderId);
+          await this.renderOrders();
+          await this.renderOverview();
+        }
+      },
+
+      async rejectQC(orderId) {
+        const remarks = document.getElementById('qcRemarks')?.value.trim() || '';
+        if (!remarks) {
+          App.showToast('Please enter rejection remarks.', 'warning');
+          return;
+        }
+        if (!confirm('Reject quality check? This will raise a dispute.')) return;
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'qc_rejected',
+          message: 'Quality inspection failed. Remarks: ' + remarks
+        });
+        if (result) {
+          App.showToast('QC Rejected. Dispute raised.', 'info');
+          await this.openOrderDetail(orderId);
+          await this.renderOrders();
+          await this.renderOverview();
+        }
+      },
+
+      async confirmBalancePayment(e, orderId) {
+        e.preventDefault();
+        const amount = document.getElementById('balanceAmount').value;
+        const ref = document.getElementById('balanceRef').value.trim();
+        if (!confirm('Confirm balance payment of ' + App.formatCurrency(parseFloat(amount)) + '?')) return;
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'balance_payment',
+          quoted_price: parseFloat(amount),
+          message: 'Balance payment confirmed.' + (ref ? ' Ref: ' + ref : '')
+        });
+        if (result) {
+          App.showToast('Balance payment recorded! Order completed.', 'success');
+          await this.openOrderDetail(orderId);
+          await this.renderOrders();
+          await this.renderOverview();
+        }
+      },
+
+      async downloadInvoice(orderId) {
+        try {
+          const res = await fetch(API.BASE + '/orders/' + orderId + '/invoice', {
+            headers: { 'Authorization': 'Bearer ' + API.token }
+          });
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || res.statusText);
+          }
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'Invoice-' + orderId + '.pdf';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+        } catch (err) {
+          App.showToast('Failed to download invoice: ' + err.message, 'error');
         }
       },
 
