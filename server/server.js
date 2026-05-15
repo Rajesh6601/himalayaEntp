@@ -421,7 +421,7 @@ app.get('/api/orders/:id/po', authenticate, async (req, res) => {
     doc.text(order.buyer_phone || '', rightCol, y);
 
     y += 14;
-    doc.text('Ph: +91 98765 43210', leftCol, y);
+    doc.text('Ph: +91 93865 94403', leftCol, y);
 
     y += 14;
     doc.fontSize(8).fillColor('#666666').text('All type of Automobile Body', leftCol, y);
@@ -837,6 +837,19 @@ app.post('/api/orders/:id/invoice', authenticate, requireRole('supplier'), async
     const igstAmt = Math.round(subtotal * iRate / 100 * 100) / 100;
     const totalTax = cgstAmt + sgstAmt + igstAmt;
     const grandTotal = subtotal + totalTax;
+
+    // Validate invoice total against PO value (5% tolerance for tax/transport adjustments)
+    const poValue = Number(order.total_value || 0);
+    if (poValue > 0) {
+      const tolerance = 0.05; // 5%
+      const maxAllowed = poValue * (1 + tolerance);
+      if (subtotal > maxAllowed) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({
+          error: `Invoice subtotal (₹${subtotal.toLocaleString('en-IN')}) exceeds PO value (₹${poValue.toLocaleString('en-IN')}) by more than 5%. Maximum allowed: ₹${maxAllowed.toLocaleString('en-IN')}`
+        });
+      }
+    }
 
     // Insert invoice
     const invResult = await client.query(

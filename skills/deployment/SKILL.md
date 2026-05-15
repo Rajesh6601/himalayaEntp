@@ -203,18 +203,19 @@ Set these in `/opt/himalaya/.env` on the VPS:
 
 ---
 
-## RFQ Negotiation Workflow
+## RFQ Negotiation & Procure-to-Pay Workflow
 
-The system supports a full RFQ lifecycle:
+The system supports a full B2B procure-to-pay lifecycle:
 
 ```
-Buyer sends RFQ → Supplier reviews → Supplier sends Quote → Buyer reviews
-→ Negotiation (counter-offers) → Agreement → Purchase Order → Fulfillment
+Buyer sends RFQ → Supplier sends Quote → Negotiation → Acceptance
+→ Purchase Order (PDF) → Invoice → Dispatch → GRN → QC → Payment → Completed
 ```
 
-**Order statuses:** pending → quoted → negotiating → accepted → po_issued → in-progress → completed
+**Full order status pipeline:**
+pending → quoted → negotiating → accepted → po_issued → advance_paid → in-progress → invoiced → dispatched → delivered → qc_approved → completed
 
-**Status transitions are driven by messages:**
+**Phase 1 — Sourcing & Negotiation (implemented):**
 | Current Status | Message Type | Sender | New Status |
 |---|---|---|---|
 | pending | quote | supplier | quoted |
@@ -225,6 +226,23 @@ Buyer sends RFQ → Supplier reviews → Supplier sends Quote → Buyer reviews
 | negotiating | counter_offer | buyer | negotiating |
 | negotiating | acceptance | any | accepted |
 | any | comment | any | unchanged |
+
+**Phase 2 — Fulfillment (implemented):**
+| Current Status | Action | Actor | New Status |
+|---|---|---|---|
+| po_issued | Confirm advance payment (amount + UTR ref) | Buyer | advance_paid |
+| advance_paid | Start production | Supplier | in-progress |
+| po_issued/advance_paid/in-progress | Create invoice against PO (GST, line items) | Supplier | invoiced |
+| invoiced/in-progress | Record dispatch + challan | Supplier | dispatched |
+
+**Phase 3 — Receipt & Payment (implemented):**
+| Current Status | Action | Actor | New Status |
+|---|---|---|---|
+| dispatched | Record GRN (date, condition, remarks) | Buyer | delivered |
+| delivered | QC inspection passed | Buyer | qc_approved |
+| delivered | QC inspection failed + dispute remarks | Buyer | disputed |
+| qc_approved | Release balance payment (total - advance) | Buyer | completed |
+| disputed | Supplier responds with dispute_response | Supplier | disputed (unchanged) |
 
 **Migration for existing deployments:**
 ```bash

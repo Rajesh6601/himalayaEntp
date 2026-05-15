@@ -159,11 +159,16 @@ Any automobile body customization on demand.
 - Manage inquiry basket (add/remove products, adjust quantities)
 - Submit inquiries to Himalaya Enterprises
 - Submit RFQ (Request for Quotation) for custom work with detailed specifications
-- Track order history with status timeline (Pending → Confirmed → In Progress → Completed)
+- Track order history with full status timeline
 - View and manage saved/favorite products
 - See order summary and total values
 - Issue Purchase Orders and download PO as PDF
-- Download PO PDF for any order with status po_issued, in-progress, or completed
+- Download PO PDF for any order with status po_issued or later
+- Confirm advance payment with amount and UTR/transaction reference (status: po_issued → advance_paid)
+- Receive and review invoices raised by supplier against PO
+- Record Goods Receipt (GRN) with date, condition, and remarks (status: dispatched → delivered)
+- Perform quality inspection and approve/reject received goods (status: delivered → qc_approved / disputed)
+- Release balance payment after QC approval; balance auto-calculated as (PO Total - Advance Paid) (status: qc_approved → completed)
 
 ### 6. Supplier Dashboard (`pages/supplier.html`)
 
@@ -173,9 +178,14 @@ Any automobile body customization on demand.
 - Delete products from catalog
 - Update stock levels in real-time
 - View and manage incoming inquiries and RFQs
-- Update order status (Pending → Confirmed → In Progress → Completed)
+- Update order/production status through the full lifecycle
 - View analytics overview (total products, pending orders, revenue, total inquiries)
-- Download Purchase Order PDF for orders with status po_issued, in-progress, or completed
+- Download Purchase Order PDF for orders with status po_issued or later
+- Create and send invoices against Purchase Orders (with GST rates, line items, HSN code, place of supply, payment terms)
+- Record dispatch with delivery challan details (dispatch date, vehicle number, challan number, transporter)
+- View buyer's GRN acknowledgment and QC inspection results
+- Track payment status (advance received, balance pending/received)
+- Respond to disputes raised by buyer after QC rejection
 
 ---
 
@@ -258,7 +268,11 @@ Any automobile body customization on demand.
 
 ## Business Exchange Workflow
 
+### Full Procure-to-Pay (P2P) Lifecycle
+
 ```
+PHASE 1: SOURCING & NEGOTIATION (implemented)
+─────────────────────────────────────────────
 Buyer browses catalog → views product images, specs, pricing
     ↓
 Adds products to inquiry basket / submits RFQ for custom work
@@ -272,13 +286,103 @@ Supplier sends quote → Buyer negotiates (counter-offers) → Agreement
 Buyer accepts quote → Status: Accepted
     ↓
 Buyer issues Purchase Order → Status: PO Issued → PDF auto-downloads
-    ↓
+Both buyer and supplier can download the PO PDF at any time after issuance.
+
+PHASE 2: FULFILLMENT & INVOICING (implemented)
+──────────────────────────────────────────
+Buyer pays advance (amount entered by buyer, suggested 50%) → Status: Advance Paid
+    ↓ (advance amount stored in orders.advance_paid)
 Manufacturing begins → Status: In Progress
     ↓
-Product delivered → Status: Completed
+Supplier creates Invoice against PO (with GST, line items, payment terms)
+    → Status: Invoiced
+    ↓
+Supplier dispatches goods (records dispatch date, vehicle/challan number)
+    → Status: Dispatched
 
-Both buyer and supplier can download the PO PDF at any time after issuance.
+PHASE 3: RECEIPT, INSPECTION & PAYMENT (implemented)
+─────────────────────────────────────────────────
+Buyer receives goods → creates GRN (Goods Receipt Note)
+    → Status: Delivered
+    ↓
+Buyer performs Quality Inspection
+    - Dimensional checks, weld quality, paint, hydraulics
+    - Approve / Reject with remarks
+    ↓
+If QC approved → Status: QC Approved
+    ↓
+Buyer releases balance payment (Total - Advance Paid = Balance Due)
+    → Status: Completed (balance amount stored in orders.balance_paid)
+    ↓
+If QC rejected → Buyer raises dispute with remarks
+    → Status: Disputed → Supplier responds with dispute_response
 ```
+
+### Order Status Pipeline
+
+| # | Status | Set By | Description |
+|---|--------|--------|-------------|
+| 1 | `pending` | System | Inquiry/RFQ submitted by buyer |
+| 2 | `quoted` | Supplier | Supplier sends first quote |
+| 3 | `negotiating` | Either | Counter-offers exchanged |
+| 4 | `accepted` | Buyer | Buyer accepts final price |
+| 5 | `po_issued` | Buyer | Formal Purchase Order generated (PDF) |
+| 6 | `advance_paid` | Buyer | Advance payment confirmed (amount stored in orders.advance_paid) |
+| 7 | `in-progress` | Supplier | Manufacturing/fabrication started |
+| 8 | `invoiced` | Supplier | Invoice raised against PO (GST-compliant with line items) |
+| 9 | `dispatched` | Supplier | Goods shipped with delivery challan (vehicle, date, challan no.) |
+| 10 | `delivered` | Buyer | Buyer records GRN — goods received (date, condition, remarks) |
+| 11 | `qc_approved` | Buyer | Quality inspection passed |
+| 12 | `completed` | Buyer | Balance payment released (balance = total - advance), order closed |
+| — | `cancelled` | Either | Order cancelled at any pre-dispatch stage |
+| — | `disputed` | Buyer | QC failed, dispute raised for resolution |
+
+### Key Documents in the Workflow
+
+| Document | Generated By | When | Purpose |
+|----------|-------------|------|---------|
+| **Purchase Order (PO)** | System (PDF) | Buyer issues PO | Formal commitment to buy at agreed price |
+| **Invoice** | Supplier | After production / before dispatch | GST-compliant tax invoice for payment |
+| **Delivery Challan** | Supplier | At dispatch | Proof of shipment, vehicle & transport details |
+| **GRN (Goods Receipt Note)** | Buyer | On receiving goods | Formal acknowledgment of receipt |
+| **QC Report** | Buyer | After inspection | Accept/reject with inspection remarks |
+| **Payment Receipt** | System | On payment confirmation | Record of advance & balance payments |
+
+### Payment Flow (Implemented)
+
+**Advance Payment (Buyer → Supplier):**
+- Triggered when order status is `po_issued`
+- Buyer enters advance amount (placeholder suggests 50% of PO value) and optional UTR/transaction reference
+- Backend stores amount in `orders.advance_paid` column and transitions status to `advance_paid`
+- Role-restricted: only buyers can send `advance_payment` messages
+
+**Balance Payment (Buyer → Supplier):**
+- Triggered when order status is `qc_approved` (after goods received and QC passed)
+- UI displays: `Advance Paid: ₹X | Balance Due: ₹(Total - Advance)`
+- Balance amount auto-calculated: `PO Total Value - Advance Paid`
+- Backend stores amount in `orders.balance_paid` column and transitions status to `completed`
+- Role-restricted: only buyers can send `balance_payment` messages
+
+**Invoice PDF Payment Display:**
+- Invoice PDF shows `Advance Received: ₹X | Balance Due: ₹(Grand Total - Advance Paid)`
+- Payment terms displayed from invoice record (default: "50% advance, 50% on delivery after QC")
+
+**Database Columns (orders table):**
+- `advance_paid NUMERIC(14,2) DEFAULT 0` — stores advance payment amount
+- `balance_paid NUMERIC(14,2) DEFAULT 0` — stores balance payment amount
+
+**Invoice vs PO Validation (Implemented):**
+- Server rejects invoice if subtotal exceeds PO value by more than 5% tolerance
+- Error message shows exact amounts: invoice subtotal, PO value, and maximum allowed
+- 5% tolerance accounts for minor tax/transport adjustments
+- Supplier invoice form displays the PO value being invoiced against for transparency
+
+### Payment Terms (Default)
+- **50% advance** on PO issuance
+- **50% balance** on delivery after QC approval
+- Prices inclusive of fabrication; transport extra
+- PO valid for 30 days from date of issue
+- Disputes subject to Patna jurisdiction
 
 ---
 
@@ -467,7 +571,7 @@ To customize the platform:
 Industrial Area, Adityapur
 Jamshedpur, Jharkhand 831013, India
 
-- **Phone**: +91 98765 43210 (Sales), +91 98765 43211 (Office)
+- **Phone**: +91 93865 94403 (Sales), +91 93865 94403 (Office)
 - **Email**: info@himalayaentp.com, sales@himalayaentp.com
-- **WhatsApp**: +91 98765 43210
+- **WhatsApp**: +91 93865 94403
 - **Hours**: Monday - Saturday, 9:00 AM - 6:00 PM

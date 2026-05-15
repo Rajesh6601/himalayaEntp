@@ -215,7 +215,7 @@ INSERT INTO categories (id, name, description, icon, sort_order) VALUES
 -- ── Users ──
 INSERT INTO users (id, name, email, password, role, phone, company) VALUES
 ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Himalaya Admin', 'admin@himalayaentp.com',
-    crypt('admin123', gen_salt('bf')), 'supplier', '+91 98765 43210', 'Himalaya Enterprises'),
+    crypt('admin123', gen_salt('bf')), 'supplier', '+91 93865 94403', 'Himalaya Enterprises'),
 ('b2c3d4e5-f6a7-8901-bcde-f12345678901', 'Ramesh Kumar', 'ramesh@example.com',
     crypt('buyer123', gen_salt('bf')), 'buyer', '+91 98765 11111', 'Kumar Transport'),
 ('c3d4e5f6-a7b8-9012-cdef-123456789012', 'Suresh Traders', 'suresh@example.com',

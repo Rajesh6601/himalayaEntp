@@ -472,6 +472,7 @@
           ${canCreateInvoice ? `
           <div class="action-panel" style="margin-top:12px;">
             <h4 style="font-size:0.9rem;margin-bottom:12px;">Create Invoice</h4>
+            <p style="font-size:0.83rem;color:var(--text-light);margin-bottom:10px;">Invoice will be generated against PO value: <strong>${App.formatCurrency(order.totalValue || order.latestQuote || 0)}</strong></p>
             <form onsubmit="SupplierDash.createInvoice(event, '${orderId}')">
               <div class="form-row">
                 <div class="form-group">
