@@ -16,7 +16,7 @@ const Catalog = {
   },
 
   seedProducts() {
-    const SEED_VERSION = 3; // bump to force re-seed with water tanker images
+    const SEED_VERSION = 4; // bump to force re-seed with container-bodies category
     if (localStorage.getItem(this.PRODUCTS_KEY) && localStorage.getItem('he-seed-v') === String(SEED_VERSION)) return;
     localStorage.setItem('he-seed-v', String(SEED_VERSION));
     const products = [
@@ -51,10 +51,10 @@ const Catalog = {
         icon: '🚚', image: 'tip-trailor-2.jpg', description: 'Heavy equipment transport trailer with low deck height. Perfect for machinery, excavators, and oversized cargo.'
       },
       {
-        id: 'p6', name: 'Skeletal Container Trailer', category: 'trailers',
+        id: 'p6', name: 'Skeletal Container Trailer', category: 'container-bodies',
         specs: '20/40ft container compatible | Twist locks | Lightweight frame',
         price: 380000, priceMax: 480000, stock: 0, status: 'order',
-        icon: '🚚', image: 'container-bodies.jpg', description: 'Container chassis trailer designed for intermodal transport. Compatible with standard ISO containers.'
+        icon: '📦', image: 'container-bodies.jpg', description: 'Container chassis trailer designed for intermodal transport. Compatible with standard ISO containers.'
       },
       {
         id: 'p7', name: 'Tractor Trolley Body', category: 'tractors',
@@ -87,10 +87,10 @@ const Catalog = {
         icon: '💧', image: '5k-water-tanker.jpg', description: 'Compact water tank suitable for smaller vehicles and localized water supply needs.'
       },
       {
-        id: 'p12', name: 'Custom Truck Body', category: 'custom',
+        id: 'p12', name: 'Custom Truck Body', category: 'container-bodies',
         specs: 'Built to specification | Any vehicle type | Design consultation',
         price: 200000, priceMax: 800000, stock: 0, status: 'order',
-        icon: '🔧', image: 'container-bodies.jpg', description: 'Fully customized truck body fabrication based on your exact requirements. Includes design consultation and engineering.'
+        icon: '📦', image: 'container-bodies.jpg', description: 'Fully customized truck body fabrication based on your exact requirements. Includes design consultation and engineering.'
       },
       {
         id: 'p13', name: 'Crane Body Fabrication', category: 'custom',
@@ -278,8 +278,9 @@ const Catalog = {
     const labels = {
       tippers: 'Tippers',
       trailers: 'Trailers',
-      tractors: 'Tractor Bodies',
+      tractors: 'Tractor Trolley',
       'water-tanks': 'Water Tanks',
+      'container-bodies': 'Container Bodies',
       custom: 'Custom Fabrication'
     };
     return labels[cat] || cat;

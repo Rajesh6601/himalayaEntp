@@ -28,17 +28,16 @@ Heavy-duty tipper bodies designed for mining, construction, and transportation i
 **Features:** Hydraulic lift system, reinforced floor plates, side wall reinforcements, anti-rust coating.
 
 ### 2. Trailers
-Flatbed, low-bed, and skeletal trailers for logistics and heavy equipment transport.
+Flatbed and low-bed trailers for logistics and heavy equipment transport.
 
 | Product | Payload | Key Feature | Price Range | Image |
 |---------|---------|-------------|-------------|-------|
 | 40ft Flatbed Trailer | 35 tons | Multi-axle suspension | ₹5,50,000 - ₹7,00,000 | flat-bed-trailor.jpg |
 | Low-Bed Trailer | 60 tons | Hydraulic ramps | ₹8,50,000 - ₹11,00,000 | tip-trailor-2.jpg |
-| Skeletal Container Trailer | 30 tons | 20/40ft compatible | ₹3,80,000 - ₹4,80,000 | container-bodies.jpg |
 
 **Features:** Twist locks, air brake systems, LED lighting, powder-coated finish.
 
-### 3. Tractor Bodies
+### 3. Tractor Trolley
 Custom tractor body fabrication for agricultural and industrial use.
 
 | Product | Capacity | Use Case | Price Range | Image |
@@ -64,9 +63,16 @@ Any automobile body customization on demand.
 
 | Product | Key Feature | Price Range | Image |
 |---------|-------------|-------------|-------|
-| Custom Truck Body | Built to specification | ₹2,00,000 - ₹8,00,000 | container-bodies.jpg |
 | Crane Body Fabrication | Structural certification | ₹4,50,000 - ₹9,00,000 | — |
 | Hydraulic Tipper Kit | Retrofit 15-ton | ₹85,000 - ₹1,20,000 | tip-trailor-34cum.jpg |
+
+### 6. Container Bodies
+Container body fabrication & fittings.
+
+| Product | Key Feature | Price Range | Image |
+|---------|-------------|-------------|-------|
+| Skeletal Container Trailer | 20/40ft compatible | ₹3,80,000 - ₹4,80,000 | container-bodies.jpg |
+| Custom Truck Body | Built to specification | ₹2,00,000 - ₹8,00,000 | container-bodies.jpg |
 
 ---
 
@@ -98,7 +104,7 @@ Any automobile body customization on demand.
 
 **Use cases:**
 - Browse all 14 products with real product images
-- Filter by category: Tippers | Trailers | Tractors | Water Tanks | Custom
+- Filter by category: Tippers | Trailers | Tractor Trolley | Water Tanks | Container Bodies | Custom
 - Search products by name or specifications (live filtering)
 - Toggle between grid and list view
 - Check stock availability per product (In Stock / In Production / Made to Order)
@@ -223,7 +229,7 @@ Any automobile body customization on demand.
 
 ### For Buyers
 
-1. **Browse Products**: Visit the Product Catalog page to see all available products. Use category filters (Tippers, Trailers, Tractors, Water Tanks, Custom) and the search bar to find what you need.
+1. **Browse Products**: Visit the Product Catalog page to see all available products. Use category filters (Tippers, Trailers, Tractor Trolley, Water Tanks, Container Bodies, Custom) and the search bar to find what you need.
 
 2. **Check Availability**: Each product shows its stock status:
    - **In Stock** (green) — Available for immediate delivery
@@ -515,7 +521,7 @@ When running with Docker, the following PostgreSQL tables store all data:
 | Table | Purpose |
 |-------|---------|
 | `users` | Buyer and supplier accounts (bcrypt-hashed passwords) |
-| `categories` | Product categories (tippers, trailers, tractors, water-tanks, custom) |
+| `categories` | Product categories (tippers, trailers, tractors, water-tanks, container-bodies, custom) |
 | `products` | Full product catalog with specs, pricing, stock, images (JSONB) |
 | `orders` | Inquiries and RFQs from buyers |
 | `order_items` | Individual items within each order |

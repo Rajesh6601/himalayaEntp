@@ -208,9 +208,10 @@ CREATE TRIGGER trg_orders_updated BEFORE UPDATE ON orders
 INSERT INTO categories (id, name, description, icon, sort_order) VALUES
 ('tippers',     'Tippers',            'Heavy-duty tipper bodies for trucks',          '🚛', 1),
 ('trailers',    'Trailers',           'Flatbed, low-bed, skeletal trailers',          '🚚', 2),
-('tractors',    'Tractor Bodies',     'Custom tractor body fabrication',              '🚜', 3),
+('tractors',    'Tractor Trolley',    'Custom tractor body fabrication',              '🚜', 3),
 ('water-tanks', 'Water Tanks',        'Industrial and commercial water tanks',        '💧', 4),
-('custom',      'Custom Fabrication', 'Any automobile body customization on demand',  '🔧', 5);
+('custom',      'Custom Fabrication', 'Any automobile body customization on demand',  '🔧', 5),
+('container-bodies', 'Container Bodies', 'Container body fabrication & fittings',     '📦', 6);
 
 -- ── Users ──
 INSERT INTO users (id, name, email, password, role, phone, company) VALUES
@@ -248,10 +249,10 @@ INSERT INTO products (name, category_id, specs, description, price_min, price_ma
     'Heavy equipment transport trailer with low deck height. Perfect for machinery, excavators, and oversized cargo.',
     850000, 1100000, 1, 'available', '🚚', '["tip-trailor-2.jpg"]', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'),
 
-('Skeletal Container Trailer', 'trailers',
+('Skeletal Container Trailer', 'container-bodies',
     '20/40ft container compatible | Twist locks | Lightweight frame',
     'Container chassis trailer designed for intermodal transport. Compatible with standard ISO containers.',
-    380000, 480000, 0, 'order', '🚚', '["container-bodies.jpg"]', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'),
+    380000, 480000, 0, 'order', '📦', '["container-bodies.jpg"]', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'),
 
 ('Tractor Trolley Body', 'tractors',
     'Capacity: 8 tons | Tipping mechanism | Agricultural grade',
@@ -278,10 +279,10 @@ INSERT INTO products (name, category_id, specs, description, price_min, price_ma
     'Compact water tank suitable for smaller vehicles and localized water supply needs.',
     95000, 130000, 0, 'production', '💧', '["5k-water-tanker.jpg"]', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'),
 
-('Custom Truck Body', 'custom',
+('Custom Truck Body', 'container-bodies',
     'Built to specification | Any vehicle type | Design consultation',
     'Fully customized truck body fabrication based on your exact requirements. Includes design consultation and engineering.',
-    200000, 800000, 0, 'order', '🔧', '["container-bodies.jpg"]', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'),
+    200000, 800000, 0, 'order', '📦', '["container-bodies.jpg"]', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'),
 
 ('Crane Body Fabrication', 'custom',
     'Crane mounting platform | Outrigger supports | Structural certification',
