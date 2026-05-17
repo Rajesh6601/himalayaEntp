@@ -16,93 +16,197 @@ const Catalog = {
   },
 
   seedProducts() {
-    const SEED_VERSION = 4; // bump to force re-seed with container-bodies category
+    const SEED_VERSION = 6; // bump to force re-seed with new product images
     if (localStorage.getItem(this.PRODUCTS_KEY) && localStorage.getItem('he-seed-v') === String(SEED_VERSION)) return;
     localStorage.setItem('he-seed-v', String(SEED_VERSION));
     const products = [
+      // ── Tippers ──
       {
-        id: 'p1', name: '10-Wheeler Tipper Body', category: 'tippers',
-        specs: 'Capacity: 16 cubic meters | Material: High-tensile steel | Hydraulic lift system',
+        id: 'p1', name: '24 Cum Tipper Body', category: 'tippers',
+        specs: 'Capacity: 24 cubic meters | High-tensile steel | Heavy hydraulic system',
+        price: 380000, priceMax: 480000, stock: 3, status: 'available',
+        icon: '🚛', image: 'tipper-24cum.jpeg', description: 'Heavy-duty 24 cubic meter tipper body for large-scale mining and construction operations.'
+      },
+      {
+        id: 'p2', name: '20 Cum Tipper Body (BharatBenz 3118)', category: 'tippers',
+        specs: 'Capacity: 20 cubic meters | BharatBenz 3118 compatible | Reinforced floor',
+        price: 340000, priceMax: 420000, stock: 4, status: 'available',
+        icon: '🚛', image: 'tipper-20cum-3118.jpeg', description: '20 cubic meter tipper body designed for BharatBenz 3118 chassis. Heavy-duty construction for mining and infrastructure.'
+      },
+      {
+        id: 'p3', name: '20 Cum Tipper Body', category: 'tippers',
+        specs: 'Capacity: 20 cubic meters | Hardox steel | Standard hydraulic',
+        price: 320000, priceMax: 400000, stock: 5, status: 'available',
+        icon: '🚛', image: 'tipper-20cum.jpeg', description: '20 cubic meter tipper body built with high-tensile steel for aggregate and material transport.'
+      },
+      {
+        id: 'p4', name: '16 Cum Tipper Body', category: 'tippers',
+        specs: 'Capacity: 16 cubic meters | High-tensile steel | Hydraulic lift system',
         price: 285000, priceMax: 350000, stock: 5, status: 'available',
-        icon: '🚛', image: 'tipper.jpg', description: 'Heavy-duty tipper body designed for mining and construction. Features reinforced floor plates and side walls for maximum durability.'
+        icon: '🚛', image: 'tipper-16cum-01.jpeg', description: 'Heavy-duty 16 cubic meter tipper body designed for mining and construction. Reinforced floor plates and side walls.'
       },
       {
-        id: 'p2', name: '6-Wheeler Tipper Body', category: 'tippers',
-        specs: 'Capacity: 10 cubic meters | Mild steel construction | Standard hydraulic',
+        id: 'p5', name: '16 Cum Tipper Body (Creative)', category: 'tippers',
+        specs: 'Capacity: 16 cubic meters | Creative design | Premium finish',
+        price: 295000, priceMax: 365000, stock: 3, status: 'available',
+        icon: '🚛', image: 'tipper-16cum-02.jpeg', description: '16 cubic meter tipper with creative body design. Premium finish with enhanced durability.'
+      },
+      {
+        id: 'p6', name: '14 Cum Tipper Body', category: 'tippers',
+        specs: 'Capacity: 14 cubic meters | Mild steel construction | Standard hydraulic',
+        price: 245000, priceMax: 310000, stock: 6, status: 'available',
+        icon: '🚛', image: 'tipper-14cum.jpeg', description: '14 cubic meter tipper body ideal for medium-duty sand, gravel, and aggregate transport.'
+      },
+      {
+        id: 'p7', name: '8.5 Cum Tipper SK1613', category: 'tippers',
+        specs: 'Capacity: 8.5 cubic meters | Tata SK1613 compatible | Compact design',
         price: 185000, priceMax: 230000, stock: 8, status: 'available',
-        icon: '🚛', image: 'tipper-1.jpg', description: 'Medium-duty tipper body ideal for sand, gravel, and aggregate transport. Lightweight yet sturdy construction.'
+        icon: '🚛', image: 'tipper-8.5cum-sk1613.jpeg', description: '8.5 cubic meter tipper body for Tata SK1613 chassis. Compact yet robust for urban and semi-urban operations.'
       },
       {
-        id: 'p3', name: '12-Wheeler Tipper Body', category: 'tippers',
-        specs: 'Capacity: 22 cubic meters | Hardox steel | Heavy hydraulic system',
-        price: 420000, priceMax: 520000, stock: 0, status: 'production',
-        icon: '🚛', image: 'tip-trailor.jpg', description: 'Extra heavy-duty tipper for large-scale mining operations. Built with imported Hardox steel for extreme wear resistance.'
+        id: 'p8', name: 'Tata Ace Tipper', category: 'tippers',
+        specs: 'Tata Ace compatible | Light-duty | Hydraulic tipping',
+        price: 75000, priceMax: 110000, stock: 10, status: 'available',
+        icon: '🚛', image: 'tata-ace-tipper.jpeg', description: 'Light-duty tipper body for Tata Ace mini trucks. Perfect for small-scale construction and material transport.'
       },
       {
-        id: 'p4', name: '40ft Flatbed Trailer', category: 'trailers',
+        id: 'p9', name: 'Tipper Components Set 1', category: 'tippers',
+        specs: 'Floor plates | Side panels | Tail gate | Mounting brackets',
+        price: 45000, priceMax: 85000, stock: 15, status: 'available',
+        icon: '🚛', image: 'tipper-components-01.jpeg', description: 'Complete tipper component set including floor plates, side panels, tail gate, and mounting brackets.'
+      },
+      {
+        id: 'p10', name: 'Tipper Components Set 2', category: 'tippers',
+        specs: 'Hydraulic cylinders | Hinge assembly | Locking mechanism',
+        price: 55000, priceMax: 95000, stock: 12, status: 'available',
+        icon: '🚛', image: 'tipper-components-02.jpeg', description: 'Tipper hydraulic and mechanical component set including cylinders, hinge assemblies, and locking mechanisms.'
+      },
+      // ── Trailers ──
+      {
+        id: 'p11', name: 'Trailer Side Wall 32 FT', category: 'trailers',
+        specs: 'Length: 32ft | Side wall type | Multi-axle suspension',
+        price: 500000, priceMax: 650000, stock: 2, status: 'available',
+        icon: '🚚', image: 'trailer-sidewall-32ft.jpeg', description: '32 feet side wall trailer for bulk cargo transport. Robust construction with multi-axle suspension system.'
+      },
+      {
+        id: 'p12', name: 'Tip Trailer 28 Cum', category: 'trailers',
+        specs: 'Capacity: 28 cubic meters | Hydraulic tipping | Heavy-duty chassis',
+        price: 750000, priceMax: 950000, stock: 1, status: 'available',
+        icon: '🚚', image: 'tip-trailer-28cum.jpeg', description: '28 cubic meter tip trailer with hydraulic tipping mechanism. Heavy-duty chassis for mining and large-scale transport.'
+      },
+      {
+        id: 'p13', name: '40ft Flatbed Trailer', category: 'trailers',
         specs: 'Length: 40ft | Payload: 35 tons | Multi-axle suspension',
         price: 550000, priceMax: 700000, stock: 3, status: 'available',
-        icon: '🚚', image: 'flat-bed-trailor.jpg', description: 'Standard flatbed trailer for general cargo transport. Features robust chassis and reliable suspension system.'
+        icon: '🚚', image: 'flat-bed-trailor.jpg', description: 'Standard flatbed trailer for general cargo transport. Robust chassis and reliable suspension system.'
       },
+      // ── Tracter Trolleys ──
       {
-        id: 'p5', name: 'Low-Bed Trailer', category: 'trailers',
-        specs: 'Payload: 60 tons | Hydraulic ramps | Detachable gooseneck',
-        price: 850000, priceMax: 1100000, stock: 1, status: 'available',
-        icon: '🚚', image: 'tip-trailor-2.jpg', description: 'Heavy equipment transport trailer with low deck height. Perfect for machinery, excavators, and oversized cargo.'
-      },
-      {
-        id: 'p6', name: 'Skeletal Container Trailer', category: 'container-bodies',
-        specs: '20/40ft container compatible | Twist locks | Lightweight frame',
-        price: 380000, priceMax: 480000, stock: 0, status: 'order',
-        icon: '📦', image: 'container-bodies.jpg', description: 'Container chassis trailer designed for intermodal transport. Compatible with standard ISO containers.'
-      },
-      {
-        id: 'p7', name: 'Tractor Trolley Body', category: 'tractors',
+        id: 'p14', name: 'Tracter Trolley Type 1', category: 'tractors',
         specs: 'Capacity: 8 tons | Tipping mechanism | Agricultural grade',
         price: 120000, priceMax: 160000, stock: 12, status: 'available',
-        icon: '🚜', image: 'tractor-trolley.jpg', description: 'Agricultural tractor trolley body with hydraulic tipping. Ideal for farm produce, soil, and material transport.'
+        icon: '🚜', image: 'tracter-trolley-01.jpeg', description: 'Agricultural tracter trolley body with hydraulic tipping. Ideal for farm produce, soil, and material transport.'
       },
       {
-        id: 'p8', name: 'Heavy Tractor Chassis', category: 'tractors',
-        specs: 'For 50+ HP tractors | Reinforced frame | PTO compatible',
-        price: 95000, priceMax: 140000, stock: 6, status: 'available',
-        icon: '🚜', image: 'tractor-trolley.jpg', description: 'Custom tractor chassis body for heavy-duty agricultural and industrial applications.'
+        id: 'p15', name: 'Tracter Trolley Type 2', category: 'tractors',
+        specs: 'Heavy-duty | Reinforced frame | Higher payload',
+        price: 140000, priceMax: 185000, stock: 8, status: 'available',
+        icon: '🚜', image: 'tracter-trolley-02.jpeg', description: 'Heavy-duty tracter trolley with reinforced frame for higher payload capacity. Suitable for industrial and agricultural use.'
       },
       {
-        id: 'p9', name: '10,000L Water Tank', category: 'water-tanks',
+        id: 'p16', name: 'Tracter Trolley Type 3', category: 'tractors',
+        specs: 'Extended body | Multi-purpose | Tipping capable',
+        price: 155000, priceMax: 200000, stock: 5, status: 'available',
+        icon: '🚜', image: 'tracter-trolley-03.jpeg', description: 'Extended body tracter trolley for versatile applications. Multi-purpose design with tipping capability.'
+      },
+      {
+        id: 'p17', name: 'Tractor Adjustable Hitch', category: 'tractors',
+        specs: 'Universal fit | Adjustable height | Heavy-duty steel',
+        price: 25000, priceMax: 45000, stock: 20, status: 'available',
+        icon: '🚜', image: 'tractor-adjustable-hitch.jpeg', description: 'Universal adjustable hitch for tractor trolley connection. Heavy-duty steel construction with adjustable height mechanism.'
+      },
+      // ── Water Tanker ──
+      {
+        id: 'p18', name: '10,000L Water Tanker', category: 'water-tanks',
         specs: 'Capacity: 10,000 liters | SS304 / MS options | Mounted or standalone',
         price: 175000, priceMax: 250000, stock: 4, status: 'available',
-        icon: '💧', image: '10K-water-tanker.jpeg', description: 'Industrial water storage and transport tank. Available in stainless steel or mild steel variants.'
+        icon: '💧', image: '10K-water-tanker.jpeg', description: 'Industrial water storage and transport tanker. Available in stainless steel or mild steel variants.'
       },
       {
-        id: 'p10', name: '20,000L Water Tanker', category: 'water-tanks',
+        id: 'p19', name: '20,000L Water Tanker', category: 'water-tanks',
         specs: 'Capacity: 20,000 liters | Vehicle-mounted | Spray system included',
         price: 320000, priceMax: 420000, stock: 2, status: 'available',
         icon: '💧', image: '20k-water-tanker.jpeg', description: 'Large capacity vehicle-mounted water tanker with integrated spray system for municipal and industrial use.'
       },
       {
-        id: 'p11', name: '5,000L Water Tank', category: 'water-tanks',
+        id: 'p20', name: '5,000L Water Tanker', category: 'water-tanks',
         specs: 'Capacity: 5,000 liters | Compact design | Quick-mount system',
         price: 95000, priceMax: 130000, stock: 0, status: 'production',
-        icon: '💧', image: '5k-water-tanker.jpg', description: 'Compact water tank suitable for smaller vehicles and localized water supply needs.'
+        icon: '💧', image: '5k-water-tanker.jpg', description: 'Compact water tanker suitable for smaller vehicles and localized water supply needs.'
+      },
+      // ── Load Body ──
+      {
+        id: 'p21', name: 'Tata 720 Load Body', category: 'load-body',
+        specs: 'Tata 720 compatible | MS construction | Side-open design',
+        price: 150000, priceMax: 210000, stock: 5, status: 'available',
+        icon: '📐', image: 'tata-720-load-body.jpeg', description: 'Load body designed for Tata 720 trucks. Mild steel construction with side-open configuration for easy loading/unloading.'
       },
       {
-        id: 'p12', name: 'Custom Truck Body', category: 'container-bodies',
+        id: 'p22', name: 'Eicher Load Body', category: 'load-body',
+        specs: 'Eicher compatible | Heavy-duty | High side walls',
+        price: 165000, priceMax: 230000, stock: 4, status: 'available',
+        icon: '📐', image: 'eicher-load-body.jpeg', description: 'Heavy-duty load body for Eicher trucks. High side walls for bulk cargo with durable steel construction.'
+      },
+      // ── Containers ──
+      {
+        id: 'p23', name: 'Container Body', category: 'containers',
+        specs: 'Standard ISO compatible | Weather-proof | Lockable doors',
+        price: 350000, priceMax: 480000, stock: 2, status: 'available',
+        icon: '📦', image: 'container.jpeg', description: 'Standard container body fabrication with weather-proof construction and secure lockable doors for cargo transport.'
+      },
+      {
+        id: 'p24', name: 'Skeletal Container Trailer', category: 'containers',
+        specs: '20/40ft container compatible | Twist locks | Lightweight frame',
+        price: 380000, priceMax: 480000, stock: 0, status: 'order',
+        icon: '📦', image: 'container-bodies.jpg', description: 'Container chassis trailer designed for intermodal transport. Compatible with standard ISO containers.'
+      },
+      // ── Waste Management Solutions ──
+      {
+        id: 'p25', name: 'Garbage Tipper', category: 'waste-management',
+        specs: 'Municipal grade | Hydraulic tipping | Covered design',
+        price: 450000, priceMax: 650000, stock: 2, status: 'available',
+        icon: '♻️', image: 'garbage-tipper.jpeg', description: 'Municipal grade garbage tipper with hydraulic tipping mechanism. Covered design for hygienic waste collection and transport.'
+      },
+      {
+        id: 'p26', name: 'Prefabricated Modular Toilet', category: 'waste-management',
+        specs: 'Prefabricated | Modular design | Easy installation',
+        price: 180000, priceMax: 300000, stock: 0, status: 'order',
+        icon: '♻️', image: 'prefab-modular-toilet.jpeg', description: 'Prefabricated modular toilet unit for municipal and construction site deployment. Easy installation and relocation.'
+      },
+      // ── All kinds of Automobile Body Building work ──
+      {
+        id: 'p27', name: 'Concrete Mixer Body', category: 'custom',
+        specs: 'Drum type | Vehicle-mounted | Heavy-duty rotation system',
+        price: 550000, priceMax: 800000, stock: 0, status: 'order',
+        icon: '🔧', image: 'concrete-mixer.jpeg', description: 'Vehicle-mounted concrete mixer body with heavy-duty drum and rotation system for construction applications.'
+      },
+      {
+        id: 'p28', name: 'Food Van Body', category: 'custom',
+        specs: 'Food-grade interior | Insulated | Custom layout',
+        price: 350000, priceMax: 550000, stock: 0, status: 'order',
+        icon: '🔧', image: 'food-van.jpeg', description: 'Custom food van body with food-grade interior, insulated walls, and customizable layout for mobile food business.'
+      },
+      {
+        id: 'p29', name: 'Custom Automobile Body Building', category: 'custom',
         specs: 'Built to specification | Any vehicle type | Design consultation',
         price: 200000, priceMax: 800000, stock: 0, status: 'order',
-        icon: '📦', image: 'container-bodies.jpg', description: 'Fully customized truck body fabrication based on your exact requirements. Includes design consultation and engineering.'
+        icon: '🔧', image: 'automobile-bodybuilding-01.jpeg', description: 'All kinds of automobile body building, repairing and fabrication work. Fully customized to your exact requirements.'
       },
       {
-        id: 'p13', name: 'Crane Body Fabrication', category: 'custom',
-        specs: 'Crane mounting platform | Outrigger supports | Structural certification',
-        price: 450000, priceMax: 900000, stock: 0, status: 'order',
-        icon: '🔧', description: 'Specialized crane body and mounting platform fabrication with structural engineering certification.'
-      },
-      {
-        id: 'p14', name: 'Hydraulic Tipper Kit', category: 'custom',
-        specs: 'Retrofit kit | 15-ton capacity | Complete hydraulic system',
-        price: 85000, priceMax: 120000, stock: 7, status: 'available',
-        icon: '🔧', image: 'tip-trailor-34cum.jpg', description: 'Complete hydraulic tipper conversion kit for existing truck bodies. Easy installation with full support.'
+        id: 'p30', name: 'Special Purpose Vehicle Body', category: 'custom',
+        specs: 'Custom design | Any application | Engineering consultation',
+        price: 300000, priceMax: 1000000, stock: 0, status: 'order',
+        icon: '🔧', image: 'automobile-bodybuilding-02.jpeg', description: 'Special purpose vehicle body fabrication for unique applications. Includes complete design and engineering consultation.'
       }
     ];
     localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(products));
@@ -278,10 +382,12 @@ const Catalog = {
     const labels = {
       tippers: 'Tippers',
       trailers: 'Trailers',
-      tractors: 'Tractor Trolley',
-      'water-tanks': 'Water Tanks',
-      'container-bodies': 'Container Bodies',
-      custom: 'Custom Fabrication'
+      tractors: 'Tracter Trolleys',
+      'water-tanks': 'Water Tanker',
+      'load-body': 'Load Body',
+      containers: 'Containers',
+      'waste-management': 'Waste Management Solutions',
+      custom: 'All kinds of Automobile Body Building work'
     };
     return labels[cat] || cat;
   },

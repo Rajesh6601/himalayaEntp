@@ -409,19 +409,19 @@ app.get('/api/orders/:id/po', authenticate, async (req, res) => {
 
     y += 16;
     doc.fontSize(9).font('Helvetica').fillColor('#333333');
-    doc.text('Prop: Rajesh Kumar', leftCol, y);
+    doc.text('Managing Partner: Rajjeev Shuklaa', leftCol, y);
     doc.text(order.buyer_name, rightCol, y);
 
     y += 14;
-    doc.text('Kanhauli, Phulwari Sharif', leftCol, y);
+    doc.text('M-6, 7th Phase, Adityapur Industrial Area', leftCol, y);
     doc.text(order.buyer_email, rightCol, y);
 
     y += 14;
-    doc.text('Patna - 801505 (Bihar)', leftCol, y);
+    doc.text('Jamshedpur - 832109, Jharkhand (INDIA)', leftCol, y);
     doc.text(order.buyer_phone || '', rightCol, y);
 
     y += 14;
-    doc.text('Ph: +91 93865 94403', leftCol, y);
+    doc.text('Ph: +91 93863 91266', leftCol, y);
 
     y += 14;
     doc.fontSize(8).fillColor('#666666').text('All type of Automobile Body', leftCol, y);
@@ -994,15 +994,15 @@ app.get('/api/orders/:id/invoice', authenticate, async (req, res) => {
 
     y += 16;
     doc.fontSize(9).font('Helvetica').fillColor('#333333');
-    doc.text('Prop: Rajesh Kumar', leftCol, y);
+    doc.text('Managing Partner: Rajjeev Shuklaa', leftCol, y);
     doc.text(order.buyer_name, rightCol, y);
 
     y += 14;
-    doc.text('Kanhauli, Phulwari Sharif', leftCol, y);
+    doc.text('M-6, 7th Phase, Adityapur Industrial Area', leftCol, y);
     doc.text(order.buyer_email, rightCol, y);
 
     y += 14;
-    doc.text('Patna - 801505 (Bihar)', leftCol, y);
+    doc.text('Jamshedpur - 832109, Jharkhand (INDIA)', leftCol, y);
     doc.text(order.buyer_phone || '', rightCol, y);
 
     y += 14;

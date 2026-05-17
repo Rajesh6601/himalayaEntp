@@ -42,31 +42,42 @@
     </nav>
   </header>
 
-  <!-- ===== About Hero (Full-bleed) ===== -->
-  <section class="hero-fullbleed" style="min-height:60vh;">
+  <!-- ===== Sticky Section Navigator (Desktop Only) ===== -->
+  <nav class="about-section-nav" id="aboutSectionNav">
+    <div class="about-nav-pills">
+      <button class="about-nav-pill" data-target="story">Story</button>
+      <button class="about-nav-pill" data-target="certifications">Certifications</button>
+      <button class="about-nav-pill" data-target="vision-mission-values">Vision &amp; Mission</button>
+      <button class="about-nav-pill" data-target="ceo">Leadership</button>
+      <button class="about-nav-pill" data-target="capabilities">Capabilities</button>
+    </div>
+  </nav>
+
+  <!-- ===== 1. About Hero (45vh) ===== -->
+  <section class="hero-fullbleed" style="min-height:45vh;">
     <div class="hero-bg">
       <img src="../assets/tipper-1.jpg" alt="Himalaya Enterprises Fleet" loading="eager">
     </div>
     <div class="hero-overlay"></div>
     <div class="container hero-inner" style="max-width:800px;">
-      <div class="hero-badge animate-on-scroll">Est. 2009 &bull; Jamshedpur, India</div>
+      <div class="hero-badge animate-on-scroll">Est. 2004 &bull; Jamshedpur, India</div>
       <h1 class="hero-title animate-on-scroll" style="font-size:3rem;">
         Engineering <span>Excellence</span> in Automobile Body Manufacturing
       </h1>
       <p class="hero-subtitle animate-on-scroll">
-        Over 15 years of building India's toughest tippers, trailers, and custom vehicle bodies from the heart of Jamshedpur's industrial hub.
+        Over 22 years of building India's toughest tippers, trailers, and custom vehicle bodies from the heart of Jamshedpur's industrial hub.
       </p>
     </div>
   </section>
 
-  <!-- ===== Company Story ===== -->
-  <section class="section">
+  <!-- ===== 2. Company Story ===== -->
+  <section class="section" id="story">
     <div class="container">
       <div class="about-story-grid">
         <div class="about-story-text animate-on-scroll">
           <span class="section-label">Our Story</span>
-          <h2>From a Small Workshop to 15,000 sq.ft. Manufacturing Powerhouse</h2>
-          <p>Founded in Jamshedpur, the steel city of India, Himalaya Enterprises has been at the forefront of automobile body manufacturing for over 15 years. What started as a 3-person workshop in Adityapur has grown into one of Eastern India's most respected fabrication companies.</p>
+          <h2>From a Small Workshop to 95,000 sq.ft. Manufacturing Powerhouse</h2>
+          <p>Founded in Jamshedpur, the steel city of India, Himalaya Enterprises has been at the forefront of automobile body manufacturing for over 22 years. What started as a 3-person workshop in Adityapur has grown into one of Eastern India's most respected fabrication companies.</p>
           <p>We combine traditional craftsmanship with modern CNC-driven engineering to deliver products that exceed expectations. Our state-of-the-art facility houses cutting-edge equipment for precision cutting, bending, welding, and finishing. Every product goes through a rigorous 12-point quality check before delivery.</p>
           <p>Today, we serve fleet owners, transporters, mining companies, and municipal bodies across Jharkhand, Bihar, Odisha, and West Bengal.</p>
         </div>
@@ -78,12 +89,12 @@
     </div>
   </section>
 
-  <!-- ===== Stats Bar ===== -->
+  <!-- ===== 3. Stats Bar ===== -->
   <section class="stats-section">
     <div class="container">
       <div class="stats-counter-grid">
         <div class="counter-card animate-on-scroll">
-          <div class="counter-number" data-target="15">0</div>
+          <div class="counter-number" data-target="22">0</div>
           <span class="counter-suffix">+</span>
           <p>Years of Excellence</p>
         </div>
@@ -98,7 +109,7 @@
           <p>Happy Clients</p>
         </div>
         <div class="counter-card animate-on-scroll">
-          <div class="counter-number" data-target="15000">0</div>
+          <div class="counter-number" data-target="95000">0</div>
           <span class="counter-suffix">sq.ft</span>
           <p>Manufacturing Facility</p>
         </div>
@@ -106,48 +117,122 @@
     </div>
   </section>
 
-  <!-- ===== Mission & Values ===== -->
-  <section class="section section-alt">
+  <!-- ===== 4. Certifications Trust Strip ===== -->
+  <section class="cert-trust-strip" id="certifications">
     <div class="container">
-      <div class="section-header animate-on-scroll">
-        <span class="section-label">Our Mission</span>
-        <h2>Driving India's Transport Infrastructure Forward</h2>
-        <p>We believe in building bodies that work as hard as the people who drive them.</p>
-      </div>
-      <div class="features-grid-v2">
-        <div class="feature-card-v2 animate-on-scroll">
-          <div class="feature-icon-v2" style="background:rgba(212,56,13,0.1);color:var(--primary);">&#127919;</div>
-          <div class="feature-body">
-            <h3>Our Mission</h3>
-            <p>To be India's most trusted automobile body manufacturer by delivering uncompromising quality, innovation, and customer satisfaction in every product.</p>
+      <div class="cert-trust-inner">
+        <div class="cert-trust-item" style="cursor:pointer;" onclick="openCertLightbox('../assets/cert-zed-gold.png')">
+          <img src="../assets/cert-zed-gold.png" alt="ZED Gold Certificate">
+          <div class="cert-trust-text">
+            <h4>ZED Gold Certified</h4>
+            <p>MSME Zero Defect Zero Effect</p>
           </div>
         </div>
-        <div class="feature-card-v2 animate-on-scroll">
-          <div class="feature-icon-v2" style="background:rgba(9,132,227,0.12);color:var(--blue);">&#128065;</div>
-          <div class="feature-body">
-            <h3>Our Vision</h3>
-            <p>To expand our manufacturing capabilities across Eastern India while maintaining the personalized service and quality that defines Himalaya Enterprises.</p>
+        <div class="cert-trust-item" style="cursor:pointer;" onclick="openCertLightbox('../assets/cert-iso-14001.png')">
+          <img src="../assets/cert-iso-14001.png" alt="ISO 14001:2015">
+          <div class="cert-trust-text">
+            <h4>ISO 14001:2015</h4>
+            <p>Environmental Management</p>
           </div>
         </div>
-        <div class="feature-card-v2 animate-on-scroll">
-          <div class="feature-icon-v2" style="background:rgba(0,184,148,0.12);color:var(--green);">&#128147;</div>
-          <div class="feature-body">
-            <h3>Our Values</h3>
-            <p>Integrity in every weld, transparency in every quote, and dedication to every client. We treat your vehicle as if it were our own.</p>
-          </div>
-        </div>
-        <div class="feature-card-v2 animate-on-scroll">
-          <div class="feature-icon-v2" style="background:rgba(253,203,110,0.2);color:#e67e22;">&#128161;</div>
-          <div class="feature-body">
-            <h3>Our Promise</h3>
-            <p>Factory-direct pricing, on-time delivery, and full after-sales support with warranty coverage on every product that leaves our facility.</p>
+        <div class="cert-trust-item" style="cursor:pointer;" onclick="openCertLightbox('../assets/cert-iso-9001.png')">
+          <img src="../assets/cert-iso-9001.png" alt="ISO 9001:2015">
+          <div class="cert-trust-text">
+            <h4>ISO 9001:2015</h4>
+            <p>Quality Management System</p>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ===== CEO Section ===== -->
+  <!-- ===== 5. Vision / Mission / Values (Tabbed) ===== -->
+  <section class="section section-alt" id="vision-mission-values">
+    <div class="container">
+      <div class="section-header animate-on-scroll">
+        <span class="section-label">Who We Are</span>
+        <h2>Vision, Mission &amp; Values</h2>
+      </div>
+      <div class="tabs animate-on-scroll">
+        <button class="tab-btn active" onclick="switchAboutTab('vision')">Vision</button>
+        <button class="tab-btn" onclick="switchAboutTab('mission')">Mission</button>
+        <button class="tab-btn" onclick="switchAboutTab('values')">Core Values</button>
+      </div>
+
+      <!-- Vision Tab -->
+      <div class="tab-content active" id="tab-vision">
+        <div style="background:var(--bg-card);border-radius:16px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,0.06);max-width:800px;margin:0 auto;text-align:center;">
+          <div style="font-size:3rem;margin-bottom:16px;">&#128065;</div>
+          <p style="font-size:1.25rem;line-height:1.8;color:var(--text);">To deliver <strong>Dependable Transport Solutions</strong> to make the <strong>world a better place</strong>.</p>
+        </div>
+      </div>
+
+      <!-- Mission Tab -->
+      <div class="tab-content" id="tab-mission">
+        <div style="background:var(--bg-card);border-radius:16px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,0.06);max-width:900px;margin:0 auto;">
+          <p style="font-size:1.15rem;line-height:1.8;color:var(--text);text-align:center;margin-bottom:32px;">To <strong>attract and attain customers with innovative transport solutions</strong> and the <strong>most satisfying ownership experience</strong> leading to the <strong>market leadership</strong>.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;">
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(212,56,13,0.06);border-radius:10px;">
+              <span style="font-size:1.5rem;">&#128176;</span>
+              <div><strong>Value for Money</strong></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(9,132,227,0.06);border-radius:10px;">
+              <span style="font-size:1.5rem;">&#11088;</span>
+              <div><strong>Superior Quality</strong></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(0,184,148,0.06);border-radius:10px;">
+              <span style="font-size:1.5rem;">&#128666;</span>
+              <div><strong>Timely Delivery</strong></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(253,203,110,0.15);border-radius:10px;">
+              <span style="font-size:1.5rem;">&#128737;</span>
+              <div><strong>Safety of the Product</strong></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(108,92,231,0.06);border-radius:10px;grid-column:1 / -1;max-width:400px;margin:0 auto;">
+              <span style="font-size:1.5rem;">&#128170;</span>
+              <div><strong>Solution by Employee with High Morale</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Values Tab -->
+      <div class="tab-content" id="tab-values">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;max-width:1100px;margin:0 auto;">
+          <div class="animate-on-scroll" style="background:var(--bg-card);border-radius:14px;padding:28px;box-shadow:0 4px 20px rgba(0,0,0,0.06);border-left:4px solid var(--primary);">
+            <h3 style="margin-bottom:8px;color:var(--primary);">&#129309; Integrity</h3>
+            <p style="margin:0;line-height:1.7;">Doing what you say, you will do. Doing what is right, not what is convenient.</p>
+          </div>
+          <div class="animate-on-scroll" style="background:var(--bg-card);border-radius:14px;padding:28px;box-shadow:0 4px 20px rgba(0,0,0,0.06);border-left:4px solid #e67e22;">
+            <h3 style="margin-bottom:8px;color:#e67e22;">&#127942; Excellence</h3>
+            <p style="margin:0;line-height:1.7;">Always delivering superior results. Go the extra mile.</p>
+          </div>
+          <div class="animate-on-scroll" style="background:var(--bg-card);border-radius:14px;padding:28px;box-shadow:0 4px 20px rgba(0,0,0,0.06);border-left:4px solid var(--blue);">
+            <h3 style="margin-bottom:8px;color:var(--blue);">&#129331; Teamwork</h3>
+            <p style="margin:0;line-height:1.7;">Collaborating across the team to deliver the best work.</p>
+          </div>
+          <div class="animate-on-scroll" style="background:var(--bg-card);border-radius:14px;padding:28px;box-shadow:0 4px 20px rgba(0,0,0,0.06);border-left:4px solid #e74c3c;">
+            <h3 style="margin-bottom:8px;color:#e74c3c;">&#10084;&#65039; Passion</h3>
+            <p style="margin:0;line-height:1.7;">Do what you love and love what you do. Deliver wow to the stakeholders.</p>
+          </div>
+          <div class="animate-on-scroll" style="background:var(--bg-card);border-radius:14px;padding:28px;box-shadow:0 4px 20px rgba(0,0,0,0.06);border-left:4px solid var(--green);">
+            <h3 style="margin-bottom:8px;color:var(--green);">&#128161; Innovation</h3>
+            <p style="margin:0;line-height:1.7;">Think ahead and other new creative ideas for continuous improvement.</p>
+          </div>
+          <div class="animate-on-scroll" style="background:var(--bg-card);border-radius:14px;padding:28px;box-shadow:0 4px 20px rgba(0,0,0,0.06);border-left:4px solid #8e44ad;">
+            <h3 style="margin-bottom:8px;color:#8e44ad;">&#128640; Empowerment</h3>
+            <p style="margin:0;line-height:1.7;">Act like owners. Do the right things at the right time for the right reasons.</p>
+          </div>
+          <div class="animate-on-scroll" style="background:var(--bg-card);border-radius:14px;padding:28px;box-shadow:0 4px 20px rgba(0,0,0,0.06);border-left:4px solid #2d3436;grid-column:1 / -1;max-width:480px;margin:0 auto;">
+            <h3 style="margin-bottom:8px;color:#2d3436;">&#9889; Agility</h3>
+            <p style="margin:0;line-height:1.7;">We challenge the status quo with open minds, focus on and speed.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 6. CEO Section (Trimmed) ===== -->
   <section class="section" id="ceo">
     <div class="container">
       <div class="section-header animate-on-scroll">
@@ -157,40 +242,27 @@
       <div class="ceo-card-v2 animate-on-scroll">
         <div class="ceo-left-col">
           <div class="ceo-photo-v2">
-            <img src="../assets/rajeev_shukla.jpeg" alt="Rajeev Shukla - CEO & Founder, Himalaya Enterprises">
+            <img src="../assets/rajeev_shukla.jpeg" alt="Rajjeev Shuklaa - Managing Partner, Himalaya Enterprises">
           </div>
           <div class="ceo-sidebar-info">
-            <h3>Rajeev Shukla</h3>
-            <p class="ceo-title" style="margin-bottom:20px;">CEO & Founder</p>
-            <div class="ceo-sidebar-stats">
-              <div class="ceo-sidebar-stat">
-                <strong>20+</strong>
-                <span>Years in Industry</span>
-              </div>
-              <div class="ceo-sidebar-stat">
-                <strong>10K+</strong>
-                <span>Vehicles Delivered</span>
-              </div>
-              <div class="ceo-sidebar-stat">
-                <strong>2009</strong>
-                <span>Founded Company</span>
-              </div>
-            </div>
+            <h3>Rajjeev Shuklaa</h3>
+            <p class="ceo-title" style="margin-bottom:20px;">Managing Partner</p>
             <div class="ceo-sidebar-contact">
               <p>&#128205; Jamshedpur, Jharkhand</p>
-              <p>&#128218; B.E. Mechanical Engineering</p>
+              <p>&#128218; B.E. Comp. Sc., NIT Jamshedpur</p>
+              <p>&#128218; MBA, SPJIMR Mumbai</p>
+              <p>&#128218; Robotics, IIT Delhi</p>
               <p>&#127942; Jamshedpur Industrial Association</p>
             </div>
           </div>
         </div>
         <div class="ceo-info">
-          <h2>About Rajeev Shukla</h2>
-          <p class="ceo-title">Chief Executive Officer & Founder</p>
-          <p>Rajeev Shukla is the visionary behind Himalaya Enterprises. Born and raised in Jamshedpur, he understood the industrial heartbeat of the steel city from a young age. After completing his engineering degree, Rajeev spent several years working in the automobile manufacturing sector before founding Himalaya Enterprises in 2009.</p>
-          <p>With over two decades of experience, Rajeev has built the company from a small workshop into one of the most respected names in tipper, trailer, and custom fabrication in Eastern India. Under his leadership, the company has manufactured over 500 vehicle bodies and served 200+ clients across Jharkhand, Bihar, Odisha, and West Bengal.</p>
+          <h2>About Rajjeev Shuklaa</h2>
+          <p class="ceo-title">Managing Partner</p>
+          <p>Rajjeev Shuklaa is the visionary behind Himalaya Enterprises. Born and raised in Jamshedpur, he understood the industrial heartbeat of the steel city from a young age. After completing his B.E. in Computer Science from NIT Jamshedpur, MBA from SPJIMR Mumbai, and specialization in Robotics from IIT Delhi, he brought a unique blend of technology and business acumen to the automobile body manufacturing sector, founding the company in 2004. With over two decades of experience, he has built it from a small workshop into one of the most respected names in tipper, trailer, and custom fabrication in Eastern India.</p>
 
           <div class="ceo-vision">
-            <h4>Rajeev's Vision</h4>
+            <h4>Rajjeev's Vision</h4>
             <p style="margin:0">"My goal has always been simple: build the strongest, most reliable automobile bodies in India. Every tipper, every trailer, every tank that leaves our facility carries our name and our reputation. I want every client to feel that they made the best investment of their career when they chose Himalaya Enterprises."</p>
           </div>
 
@@ -199,11 +271,11 @@
             <div class="ceo-achieve-grid">
               <div class="ceo-achieve-item">
                 <span>&#128188;</span>
-                <p>Founded Himalaya Enterprises in 2009 with a 3-person team</p>
+                <p>Founded Himalaya Enterprises in 2004</p>
               </div>
               <div class="ceo-achieve-item">
                 <span>&#127981;</span>
-                <p>Expanded to 15,000 sq.ft. facility in Adityapur Industrial Area</p>
+                <p>Expanded to 95,000 sq.ft. facility in Adityapur Industrial Area</p>
               </div>
               <div class="ceo-achieve-item">
                 <span>&#129309;</span>
@@ -213,14 +285,6 @@
                 <span>&#9878;</span>
                 <p>Introduced Hardox steel fabrication to the Jamshedpur region</p>
               </div>
-              <div class="ceo-achieve-item">
-                <span>&#127942;</span>
-                <p>Active member of Jamshedpur Industrial Association</p>
-              </div>
-              <div class="ceo-achieve-item">
-                <span>&#127891;</span>
-                <p>Mentors young entrepreneurs in the manufacturing sector</p>
-              </div>
             </div>
           </div>
         </div>
@@ -228,26 +292,8 @@
     </div>
   </section>
 
-  <!-- ===== Product Gallery Strip ===== -->
-  <section class="gallery-strip">
-    <div class="gallery-scroll">
-      <img src="../assets/tipper.jpg" alt="Tipper" loading="lazy">
-      <img src="../assets/flat-bed-trailor.jpg" alt="Trailer" loading="lazy">
-      <img src="../assets/tip-trailor.jpg" alt="Tip Trailer" loading="lazy">
-      <img src="../assets/tractor-trolley.jpg" alt="Tractor Trolley" loading="lazy">
-      <img src="../assets/tip-trailor-34cum.jpg" alt="34 Cum Tip Trailer" loading="lazy">
-      <img src="../assets/container-bodies.jpg" alt="Container Bodies" loading="lazy">
-      <img src="../assets/tip-trailor-2.jpg" alt="Tip Trailers" loading="lazy">
-      <img src="../assets/tipper-1.jpg" alt="Tipper Fleet" loading="lazy">
-      <img src="../assets/tipper.jpg" alt="Tipper" loading="lazy">
-      <img src="../assets/flat-bed-trailor.jpg" alt="Trailer" loading="lazy">
-      <img src="../assets/tip-trailor.jpg" alt="Tip Trailer" loading="lazy">
-      <img src="../assets/tractor-trolley.jpg" alt="Tractor Trolley" loading="lazy">
-    </div>
-  </section>
-
-  <!-- ===== Manufacturing Capabilities ===== -->
-  <section class="section section-alt">
+  <!-- ===== 7. Manufacturing Capabilities ===== -->
+  <section class="section section-alt" id="capabilities">
     <div class="container">
       <div class="section-header animate-on-scroll">
         <span class="section-label">Capabilities</span>
@@ -289,34 +335,25 @@
     </div>
   </section>
 
-  <!-- ===== Certifications ===== -->
-  <section class="section">
-    <div class="container">
-      <div class="section-header animate-on-scroll">
-        <span class="section-label">Quality</span>
-        <h2>Certifications & Standards</h2>
-      </div>
-      <div class="cert-grid">
-        <div class="cert-card animate-on-scroll">
-          <div class="cert-icon">&#9878;</div>
-          <h3>ISO 9001:2015</h3>
-          <p>Quality management system certification for consistent manufacturing standards.</p>
-        </div>
-        <div class="cert-card animate-on-scroll">
-          <div class="cert-icon">&#128737;</div>
-          <h3>ARAI Compliant</h3>
-          <p>All vehicle bodies comply with Automotive Research Association of India guidelines.</p>
-        </div>
-        <div class="cert-card animate-on-scroll">
-          <div class="cert-icon">&#9989;</div>
-          <h3>RTO Approved</h3>
-          <p>Complete RTO documentation and fitness certification support for all products.</p>
-        </div>
-      </div>
+  <!-- ===== 8. Product Gallery Strip ===== -->
+  <section class="gallery-strip">
+    <div class="gallery-scroll">
+      <img src="../assets/tipper.jpg" alt="Tipper" loading="lazy">
+      <img src="../assets/flat-bed-trailor.jpg" alt="Trailer" loading="lazy">
+      <img src="../assets/tip-trailor.jpg" alt="Tip Trailer" loading="lazy">
+      <img src="../assets/tractor-trolley.jpg" alt="Tractor Trolley" loading="lazy">
+      <img src="../assets/tip-trailor-34cum.jpg" alt="34 Cum Tip Trailer" loading="lazy">
+      <img src="../assets/container-bodies.jpg" alt="Container Bodies" loading="lazy">
+      <img src="../assets/tip-trailor-2.jpg" alt="Tip Trailers" loading="lazy">
+      <img src="../assets/tipper-1.jpg" alt="Tipper Fleet" loading="lazy">
+      <img src="../assets/tipper.jpg" alt="Tipper" loading="lazy">
+      <img src="../assets/flat-bed-trailor.jpg" alt="Trailer" loading="lazy">
+      <img src="../assets/tip-trailor.jpg" alt="Tip Trailer" loading="lazy">
+      <img src="../assets/tractor-trolley.jpg" alt="Tractor Trolley" loading="lazy">
     </div>
   </section>
 
-  <!-- ===== CTA ===== -->
+  <!-- ===== 9. CTA ===== -->
   <section class="cta-section-v2">
     <div class="cta-bg">
       <img src="../assets/tip-trailor-34cum.jpg" alt="Himalaya Enterprises" loading="lazy">
@@ -332,13 +369,18 @@
     </div>
   </section>
 
+  <!-- Certificate Lightbox -->
+  <div class="cert-lightbox" id="certLightbox" onclick="this.classList.remove('active')">
+    <img id="certLightboxImg" src="" alt="Certificate">
+  </div>
+
   <!-- Footer -->
   <footer class="footer">
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
           <h3>Himalaya Enterprises</h3>
-          <p>Jamshedpur's trusted automobile body manufacturing company. Building tippers, trailers, tractor bodies, water tanks, and custom fabrication solutions since 2009.</p>
+          <p>Jamshedpur's trusted automobile body manufacturing company. Building tippers, trailers, tractor bodies, water tanks, and custom fabrication solutions since 2004.</p>
           <div class="footer-social">
             <a href="#">f</a><a href="#">in</a><a href="#">Li</a><a href="#">YT</a>
           </div>
@@ -348,8 +390,11 @@
           <ul>
             <li><a href="catalog.html">Tippers</a></li>
             <li><a href="catalog.html">Trailers</a></li>
-            <li><a href="catalog.html">Tractor Bodies</a></li>
-            <li><a href="catalog.html">Water Tanks</a></li>
+            <li><a href="catalog.html">Tracter Trolleys</a></li>
+            <li><a href="catalog.html">Water Tanker</a></li>
+            <li><a href="catalog.html">Load Body</a></li>
+            <li><a href="catalog.html">Containers</a></li>
+            <li><a href="catalog.html">Waste Management</a></li>
           </ul>
         </div>
         <div>
@@ -363,18 +408,18 @@
         <div>
           <h4>Contact</h4>
           <ul>
-            <li>Industrial Area, Adityapur</li>
-            <li>Jamshedpur, Jharkhand 831013</li>
-            <li>+91 93865 94403</li>
-            <li>info@himalayaentp.com</li>
+            <li>M-6, 7th Phase, Adityapur Industrial Area</li>
+            <li>Jamshedpur - 832109, Jharkhand (INDIA)</li>
+            <li>+91 93863 91266</li>
+            <li>himalaya_enterprises@rediffmail.com</li>
           </ul>
         </div>
       </div>
-      <div class="footer-bottom">&copy; 2024 Himalaya Enterprises. All rights reserved. | CEO: Rajeev Shukla</div>
+      <div class="footer-bottom">&copy; 2024 Himalaya Enterprises. All rights reserved. | Managing Partner: Rajjeev Shuklaa</div>
     </div>
   </footer>
 
-  <a href="https://wa.me/919386594403" target="_blank" class="fab-whatsapp">&#128172;</a>
+  <a href="https://wa.me/919386391266" target="_blank" class="fab-whatsapp">&#128172;</a>
   <button class="back-to-top">&#8593;</button>
 
   <!-- Login Modal -->
@@ -419,5 +464,77 @@
   <script src="../js/auth.js"></script>
   <script src="../js/catalog.js"></script>
   <script src="../js/cart.js"></script>
+
+  <!-- About page inline scripts -->
+  <script>
+    // Certificate lightbox
+    function openCertLightbox(src) {
+      document.getElementById('certLightboxImg').src = src;
+      document.getElementById('certLightbox').classList.add('active');
+    }
+
+    // VMV Tab switching
+    function switchAboutTab(tab) {
+      document.querySelectorAll('#vision-mission-values .tab-btn').forEach(function(btn) {
+        btn.classList.remove('active');
+      });
+      document.querySelectorAll('#vision-mission-values .tab-content').forEach(function(content) {
+        content.classList.remove('active');
+      });
+      // Activate clicked tab
+      event.currentTarget.classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    // Sticky section nav – scroll spy & click navigation
+    function initAboutNav() {
+      var nav = document.getElementById('aboutSectionNav');
+      var pills = nav.querySelectorAll('.about-nav-pill');
+      var hero = document.querySelector('.hero-fullbleed');
+      var sections = [];
+
+      pills.forEach(function(pill) {
+        var id = pill.getAttribute('data-target');
+        var el = document.getElementById(id);
+        if (el) sections.push({ id: id, el: el, pill: pill });
+        pill.addEventListener('click', function() {
+          var target = document.getElementById(id);
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+
+      function onScroll() {
+        var scrollY = window.scrollY;
+        var heroBottom = hero.offsetTop + hero.offsetHeight;
+
+        // Show/hide nav
+        if (scrollY > heroBottom - 100) {
+          nav.classList.add('visible');
+        } else {
+          nav.classList.remove('visible');
+        }
+
+        // Highlight active section
+        var current = '';
+        sections.forEach(function(s) {
+          var top = s.el.offsetTop - 200;
+          if (scrollY >= top) current = s.id;
+        });
+        pills.forEach(function(pill) {
+          pill.classList.toggle('active', pill.getAttribute('data-target') === current);
+        });
+      }
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+
+    // Initialize on DOM ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initAboutNav);
+    } else {
+      initAboutNav();
+    }
+  </script>
 </body>
 </html>
