@@ -49,15 +49,15 @@ const Auth = {
   },
 
   /* localStorage-based register (fallback) */
-  _registerLocal(name, email, password, role) {
+  _registerLocal(name, email, password) {
     const users = this.getUsers();
     if (users.find(u => u.email === email)) {
       return { success: false, message: 'Email already registered.' };
     }
-    const newUser = { id: App.generateId(), name, email, password, role };
+    const newUser = { id: App.generateId(), name, email, password, role: 'buyer' };
     users.push(newUser);
     localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
-    const session = { id: newUser.id, name, email, role };
+    const session = { id: newUser.id, name, email, role: 'buyer' };
     localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
     this.updateUI();
     return { success: true, user: session };
@@ -79,11 +79,11 @@ const Auth = {
   },
 
   /* API-backed register */
-  async register(name, email, password, role) {
+  async register(name, email, password) {
     const online = await API.check();
-    if (!online) return this._registerLocal(name, email, password, role);
+    if (!online) return this._registerLocal(name, email, password);
     try {
-      const data = await API.post('/auth/register', { name, email, password, role });
+      const data = await API.post('/auth/register', { name, email, password });
       API.setToken(data.token);
       localStorage.setItem(this.SESSION_KEY, JSON.stringify(data.user));
       this.updateUI();
@@ -161,7 +161,6 @@ const Auth = {
     const name = document.getElementById('regName').value.trim();
     const email = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPassword').value;
-    const role = document.getElementById('regRole').value;
     if (!name || !email || !password) {
       App.showToast('Please fill in all fields.', 'warning');
       return;
@@ -170,7 +169,7 @@ const Auth = {
       App.showToast('Password must be at least 6 characters.', 'warning');
       return;
     }
-    const result = await this.register(name, email, password, role);
+    const result = await this.register(name, email, password);
     if (result.success) {
       App.closeModal('loginModal');
       App.showToast(`Welcome, ${result.user.name}! Account created.`, 'success');

@@ -227,13 +227,22 @@
   <script>
     const BuyerDash = {
       currentFilter: 'all',
+      _apiProducts: null,
+
+      async _getProducts(query) {
+        try {
+          const fetched = await Catalog.fetchProducts(query);
+          if (fetched && fetched.length) { this._apiProducts = fetched; return fetched; }
+        } catch {}
+        return Catalog.filterProducts(query || {});
+      },
 
       async init() {
         if (!Auth.requireAuth('buyer')) return;
         const session = Auth.getSession();
         document.getElementById('buyerGreeting').textContent = `Welcome, ${session.name}!`;
         await this.renderOverview();
-        this.renderBrowse();
+        await this.renderBrowse();
         await this.renderOrders();
         this.renderFavorites();
       },
@@ -284,11 +293,16 @@
         `;
 
         // Recommended products - show random selection
-        const allProducts = Catalog.getProducts();
+        const allProducts = await this._getProducts();
         const recommended = allProducts.sort(() => 0.5 - Math.random()).slice(0, 3);
-        document.getElementById('recommendedProducts').innerHTML = recommended.map(p => `
+        const basePath = Catalog.getImageBasePath();
+        document.getElementById('recommendedProducts').innerHTML = recommended.map(p => {
+          const imgContent = p.image
+            ? `<img src="${basePath}${p.image}" alt="${p.name}" loading="lazy">`
+            : `<span class="product-icon">${p.icon || '📦'}</span>`;
+          return `
           <div class="product-card" data-id="${p.id}">
-            <div class="product-card-img">${p.icon || '📦'} ${Catalog.getStockBadge(p)}</div>
+            <div class="product-card-img">${imgContent} ${Catalog.getStockBadge(p)}</div>
             <div class="product-card-body">
               <span class="category-label">${Catalog.getCategoryLabel(p.category)}</span>
               <h3>${p.name}</h3>
@@ -299,8 +313,8 @@
               <button class="btn btn-outline btn-sm" onclick="Catalog.showProductDetail('${p.id}')">View</button>
               <button class="btn btn-primary btn-sm" onclick="Cart.addItem('${p.id}')">Add to Inquiry</button>
             </div>
-          </div>
-        `).join('');
+          </div>`;
+        }).join('');
 
         // Recent orders
         const recent = orders.slice(-3).reverse();
@@ -319,16 +333,16 @@
           `).join('');
       },
 
-      setFilter(category, el) {
+      async setFilter(category, el) {
         this.currentFilter = category;
         document.querySelectorAll('#section-browse .filter-tab').forEach(t => t.classList.remove('active'));
         if (el) el.classList.add('active');
-        this.renderBrowse();
+        await this.renderBrowse();
       },
 
-      renderBrowse() {
+      async renderBrowse() {
         const search = document.getElementById('buyerSearch')?.value || '';
-        const products = Catalog.filterProducts({ category: this.currentFilter, search });
+        const products = await this._getProducts({ category: this.currentFilter, search });
         const grid = document.getElementById('buyerBrowseGrid');
         if (!grid) return;
 
@@ -337,12 +351,16 @@
           return;
         }
 
+        const browseBasePath = Catalog.getImageBasePath();
         grid.innerHTML = products.map(p => {
           const isFav = Cart.isFavorite(p.id);
+          const imgContent = p.image
+            ? `<img src="${browseBasePath}${p.image}" alt="${p.name}" loading="lazy">`
+            : `<span class="product-icon">${p.icon || '📦'}</span>`;
           return `
             <div class="product-card">
               <div class="product-card-img">
-                ${p.icon || '📦'}
+                ${imgContent}
                 ${Catalog.getStockBadge(p)}
                 <button class="fav-btn ${isFav ? 'active' : ''}" onclick="Cart.toggleFavorite('${p.id}');BuyerDash.renderBrowse();BuyerDash.renderFavorites();" style="position:absolute;top:12px;left:12px;" title="Save">
                   ${isFav ? '&#10084;' : '&#9825;'}
@@ -804,7 +822,7 @@
         }
       },
 
-      renderFavorites() {
+      async renderFavorites() {
         const favIds = Cart.getFavorites();
         const container = document.getElementById('favoriteProducts');
         if (!container) return;
@@ -814,11 +832,17 @@
           return;
         }
 
-        const products = favIds.map(id => Catalog.getProduct(id)).filter(Boolean);
-        container.innerHTML = products.map(p => `
+        const allProducts = await this._getProducts();
+        const products = favIds.map(id => allProducts.find(p => p.id === id)).filter(Boolean);
+        const favBasePath = Catalog.getImageBasePath();
+        container.innerHTML = products.map(p => {
+          const imgContent = p.image
+            ? `<img src="${favBasePath}${p.image}" alt="${p.name}" loading="lazy">`
+            : `<span class="product-icon">${p.icon || '📦'}</span>`;
+          return `
           <div class="product-card">
             <div class="product-card-img">
-              ${p.icon || '📦'}
+              ${imgContent}
               ${Catalog.getStockBadge(p)}
               <button class="fav-btn active" onclick="Cart.toggleFavorite('${p.id}');BuyerDash.renderFavorites();" style="position:absolute;top:12px;left:12px;">&#10084;</button>
             </div>
@@ -831,8 +855,8 @@
               <button class="btn btn-outline btn-sm" onclick="Catalog.showProductDetail('${p.id}')">View</button>
               <button class="btn btn-primary btn-sm" onclick="Cart.addItem('${p.id}')">Add to Inquiry</button>
             </div>
-          </div>
-        `).join('');
+          </div>`;
+        }).join('');
       },
 
       async submitRFQ(e) {

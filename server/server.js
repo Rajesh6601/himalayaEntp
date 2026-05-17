@@ -76,12 +76,12 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.post('/api/auth/register', async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password } = req.body;
   try {
     const hash = await bcrypt.hash(password, 10);
     const result = await db.query(
       'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
-      [name, email, hash, role || 'buyer']
+      [name, email, hash, 'buyer']
     );
     const user = result.rows[0];
     const token = jwt.sign(
