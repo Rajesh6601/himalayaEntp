@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Catalog - Himalaya Enterprises</title>
+  <title>Testimonials - Himalaya Enterprises</title>
   <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
@@ -17,16 +17,15 @@
       </a>
       <div class="nav-links" id="navLinks">
         <a href="../index.html">Home</a>
-        <a href="catalog.html" class="active">Products</a>
+        <a href="catalog.html">Products</a>
         <a href="about.html">About</a>
-        <a href="testimonials.html">Testimonials</a>
+        <a href="testimonials.html" class="active">Testimonials</a>
         <a href="contact.html">Contact</a>
       </div>
       <div class="nav-actions">
         <button class="theme-toggle" id="themeToggle">&#9790;</button>
         <button class="btn btn-icon btn-ghost" id="cartBtn" onclick="Cart.openCart()" style="display:none;position:relative;">
-          &#128722;
-          <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+          &#128722;<span class="cart-badge" id="cartBadge" style="display:none;">0</span>
         </button>
         <button class="btn-login" id="loginBtn" onclick="Auth.showLoginModal()">Login</button>
         <div class="user-menu" id="userMenu" style="display:none;">
@@ -44,55 +43,68 @@
     </nav>
   </header>
 
-  <!-- ===== Catalog Hero ===== -->
+  <!-- ===== Hero ===== -->
   <section class="hero-fullbleed" style="min-height:45vh;">
     <div class="hero-bg">
-      <img src="../assets/tip-trailor.jpg" alt="Himalaya Enterprises Products" loading="eager">
+      <img src="../assets/tipper-1.jpg" alt="Himalaya Enterprises Fleet" loading="eager">
     </div>
     <div class="hero-overlay"></div>
-    <div class="container hero-inner" style="max-width:750px;padding-bottom:40px;">
-      <div class="hero-badge animate-on-scroll">14+ Products Available</div>
+    <div class="container hero-inner" style="max-width:750px;">
+      <div class="hero-badge animate-on-scroll">What Our Clients Say</div>
       <h1 class="hero-title animate-on-scroll" style="font-size:2.8rem;">
-        Product <span>Catalog</span>
+        Trusted by <span>Transporters</span> &amp; Fleet Owners
       </h1>
-      <p class="hero-subtitle animate-on-scroll" style="margin-bottom:0;">
-        Browse our complete range of tippers, trailers, tractor bodies, water tanks, and custom fabrication products.
+      <p class="hero-subtitle animate-on-scroll">
+        Hear from the businesses that rely on Himalaya Enterprises for their automobile body manufacturing needs.
       </p>
     </div>
   </section>
 
-  <!-- ===== Catalog Content ===== -->
-  <section class="section" style="padding-top:40px;">
+  <!-- ===== Testimonials ===== -->
+  <section class="section" id="testimonials">
     <div class="container">
-      <!-- Toolbar -->
-      <div class="catalog-toolbar">
-        <div class="search-box">
-          <span class="search-icon">&#128269;</span>
-          <input type="text" id="catalogSearch" placeholder="Search products...">
-        </div>
-        <div class="filter-tabs">
-          <button class="filter-tab active" data-category="all">All</button>
-          <button class="filter-tab" data-category="tippers">Tippers</button>
-          <button class="filter-tab" data-category="trailers">Trailers</button>
-          <button class="filter-tab" data-category="tractors">Tracter Trolleys</button>
-          <button class="filter-tab" data-category="water-tanks">Water Tanker</button>
-          <button class="filter-tab" data-category="load-body">Load Body</button>
-          <button class="filter-tab" data-category="containers">Containers</button>
-          <button class="filter-tab" data-category="waste-management">Waste Management Solutions</button>
-          <button class="filter-tab" data-category="custom">All kinds of Automobile Body Building work</button>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <span id="productCount" style="font-size:0.85rem;color:var(--text-muted);"></span>
-          <div class="view-toggle">
-            <button class="view-btn active" data-view="grid" title="Grid View">&#9638;</button>
-            <button class="view-btn" data-view="list" title="List View">&#9776;</button>
+      <div class="section-header animate-on-scroll">
+        <span class="section-label">Testimonials</span>
+        <h2>Our Clients Speak</h2>
+        <p>We take pride in every vehicle body we build. Here's what our clients have to say about working with us.</p>
+      </div>
+      <div class="testimonials-grid-v2">
+        <div class="testimonial-card-v2 animate-on-scroll">
+          <div class="testimonial-quote">&#8220;</div>
+          <p class="testimonial-text">"We've been buying tipper bodies from Himalaya for 5 years. The quality is unmatched and they always deliver on time. Best in Jamshedpur without a doubt."</p>
+          <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">AK</div>
+            <div class="testimonial-info">
+              <h4>Ajay Kumar</h4>
+              <p>Fleet Owner, Dhanbad</p>
+            </div>
           </div>
         </div>
-      </div>
-
-      <!-- Products Grid -->
-      <div class="products-grid" id="catalogGrid">
-        <!-- Rendered by catalog.js -->
+        <div class="testimonial-card-v2 animate-on-scroll">
+          <div class="testimonial-quote">&#8220;</div>
+          <p class="testimonial-text">"Got a custom water tanker built for our municipal contract. The team understood our specs perfectly and the final product exceeded expectations."</p>
+          <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">SM</div>
+            <div class="testimonial-info">
+              <h4>Sunil Mehta</h4>
+              <p>Municipal Contractor, Ranchi</p>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card-v2 animate-on-scroll">
+          <div class="testimonial-quote">&#8220;</div>
+          <p class="testimonial-text">"Himalaya Enterprises fabricated 12 trailer bodies for our logistics fleet. Professional team, fair pricing, and the bodies have held up beautifully under heavy use."</p>
+          <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">PG</div>
+            <div class="testimonial-info">
+              <h4>Priya Gupta</h4>
+              <p>Director, PG Logistics</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -104,11 +116,11 @@
     </div>
     <div class="cta-overlay"></div>
     <div class="container cta-inner">
-      <h2 class="animate-on-scroll">Need a Custom Vehicle Body?</h2>
-      <p class="animate-on-scroll">Don't see exactly what you need? We specialize in custom fabrication. Tell us your requirements and we'll engineer it.</p>
+      <h2 class="animate-on-scroll">Ready to Build Your Next Vehicle Body?</h2>
+      <p class="animate-on-scroll">Whether you need a single tipper or a fleet of trailers, our team is ready to deliver quality at scale.</p>
       <div class="cta-btns animate-on-scroll">
-        <a href="contact.html" class="btn btn-primary btn-lg">Request Custom Quote</a>
-        <a href="about.html" class="btn btn-outline-white btn-lg">Learn About Us</a>
+        <a href="contact.html" class="btn btn-primary btn-lg">Get Free Quote</a>
+        <a href="catalog.html" class="btn btn-outline-white btn-lg">Browse Catalog</a>
       </div>
     </div>
   </section>
@@ -159,21 +171,16 @@
     </div>
   </footer>
 
-  <!-- Floating -->
-  <a href="https://wa.me/919386594403" target="_blank" class="fab-whatsapp">&#128172;</a>
+  <a href="https://wa.me/919386391266" target="_blank" class="fab-whatsapp">&#128172;</a>
   <button class="back-to-top">&#8593;</button>
 
   <!-- Cart Sidebar -->
   <div class="cart-overlay" onclick="Cart.closeCart()"></div>
   <div class="cart-sidebar">
-    <div class="cart-header">
-      <h3>&#128722; Inquiry Basket</h3>
-      <button class="modal-close" onclick="Cart.closeCart()">&#10005;</button>
-    </div>
+    <div class="cart-header"><h3>&#128722; Inquiry Basket</h3><button class="modal-close" onclick="Cart.closeCart()">&#10005;</button></div>
     <div class="cart-items"></div>
     <div class="cart-footer">
       <button class="btn btn-primary btn-block" onclick="Cart.submitInquiry()">Submit Inquiry</button>
-      <button class="btn btn-ghost btn-block mt-1" onclick="Cart.clearCart()">Clear All</button>
     </div>
   </div>
 
@@ -190,19 +197,10 @@
           <button class="login-tab" data-tab="register" onclick="Auth.switchLoginTab('register')">Register</button>
         </div>
         <form class="login-form" id="loginForm" onsubmit="Auth.handleLogin(event)">
-          <div class="form-group">
-            <label for="loginEmail">Email</label>
-            <input type="email" id="loginEmail" placeholder="your@email.com" required>
-          </div>
-          <div class="form-group">
-            <label for="loginPassword">Password</label>
-            <input type="password" id="loginPassword" placeholder="Enter password" required>
-          </div>
+          <div class="form-group"><label for="loginEmail">Email</label><input type="email" id="loginEmail" required></div>
+          <div class="form-group"><label for="loginPassword">Password</label><input type="password" id="loginPassword" required></div>
           <button type="submit" class="btn btn-primary btn-block">Login</button>
-          <p class="mt-2 text-center" style="font-size:0.8rem;color:var(--text-muted);">
-            Demo: admin@himalayaentp.com / admin123 (Supplier)<br>
-            ramesh@example.com / buyer123 (Buyer)
-          </p>
+          <p class="mt-2 text-center" style="font-size:0.8rem;color:var(--text-muted);">Demo: admin@himalayaentp.com / admin123</p>
         </form>
         <form class="login-form" id="registerForm" style="display:none" onsubmit="Auth.handleRegister(event)">
           <div class="form-group"><label for="regName">Full Name</label><input type="text" id="regName" required></div>
@@ -212,17 +210,6 @@
           <button type="submit" class="btn btn-primary btn-block">Create Account</button>
         </form>
       </div>
-    </div>
-  </div>
-
-  <!-- Product Detail Modal -->
-  <div class="modal-overlay" id="productModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>Product Details</h3>
-        <button class="modal-close" onclick="App.closeModal('productModal')">&#10005;</button>
-      </div>
-      <div class="modal-body"></div>
     </div>
   </div>
 

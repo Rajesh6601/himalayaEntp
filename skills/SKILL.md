@@ -93,7 +93,7 @@ Container body fabrication & fittings.
 
 **Visual features:**
 - Full-bleed hero with parallax scrolling background image (`tipper.jpg`)
-- Trust bar with certification badges (ISO 9001, ARAI, RTO Approved)
+- Trust bar with certification badges (ISO 9001, AIS-113 NATRAX, RTO Approved)
 - Category showcase grid with hover zoom effect on image tiles
 - Animated stat counters (triggered by scroll via IntersectionObserver)
 - Infinite-scrolling gallery strip (CSS keyframe animation, pauses on hover)
@@ -125,7 +125,7 @@ Container body fabrication & fittings.
 - View CEO Rajeev Shukla's profile with photo (`rajeev_shukla.jpeg`)
 - See CEO achievements, education, experience, and professional associations
 - View manufacturing capabilities (CNC cutting, welding, paint, testing, assembly)
-- Check certifications (ISO 9001:2015, ARAI Compliant, RTO Approved)
+- Check certifications (ISO 9001:2015, AIS-113 approvals conducted by NATRAX as per CMVR compliance, RTO Approved)
 - Browse product gallery strip
 - Navigate to contact or catalog from CTA section
 
@@ -427,7 +427,7 @@ Rajeev Shukla is the visionary founder of Himalaya Enterprises. Born and raised 
 
 ## Certifications
 - ISO 9001:2015 (Quality Management)
-- ARAI Compliant (Automotive Research Association of India)
+- AIS-113 approvals conducted by NATRAX as per CMVR compliance
 - RTO Approved (Complete documentation support)
 
 ---
