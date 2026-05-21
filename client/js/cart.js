@@ -14,7 +14,7 @@ const Cart = {
     this.updateBadge();
   },
 
-  addItem(productId) {
+  async addItem(productId) {
     if (!Auth.isLoggedIn()) {
       Auth.showLoginModal();
       return;
@@ -24,7 +24,7 @@ const Cart = {
       App.showToast('Already in your inquiry basket.', 'info');
       return;
     }
-    const product = Catalog.getProduct(productId);
+    const product = await Catalog.fetchProduct(productId);
     if (!product) return;
     items.push({
       productId,
