@@ -2633,6 +2633,9 @@ h1, h2, h3, h4, h5, h6 { line-height: 1.3; color: var(--text); }
   }
 }
 
+/* ===== Utility Animations ===== */
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
 /* ===== Print Styles ===== */
 @media print {
   .header, .footer, .fab-whatsapp, .back-to-top, .cart-sidebar, .cart-overlay { display: none !important; }

@@ -251,9 +251,13 @@
   <div class="modal-overlay" id="orderDetailModal">
     <div class="modal modal-wide">
       <div class="modal-header">
-        <h3 id="orderDetailTitle">Order Details</h3>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <h3 id="orderDetailTitle">Order Details</h3>
+          <button class="btn btn-ghost btn-sm" onclick="SupplierDash.refreshOrderDetail()" title="Refresh to see latest updates" style="font-size:1rem;padding:4px 8px;">&#8635;</button>
+        </div>
         <button class="modal-close" onclick="App.closeModal('orderDetailModal')">&#10005;</button>
       </div>
+      <div style="padding:4px 24px 0;font-size:0.78rem;color:var(--text-muted);">Click &#8635; refresh to see the latest updates from the buyer</div>
       <div class="modal-body" id="orderDetailBody">
         <!-- Rendered by JS -->
       </div>
@@ -470,7 +474,19 @@
         this.applyOrderFilters();
       },
 
+      _currentOrderId: null,
+
+      async refreshOrderDetail() {
+        if (!this._currentOrderId) return;
+        const btn = document.querySelector('#orderDetailModal .modal-header button[onclick*="refresh"]');
+        if (btn) { btn.disabled = true; btn.style.animation = 'spin 0.8s linear infinite'; }
+        await this.openOrderDetail(this._currentOrderId);
+        if (btn) { btn.disabled = false; btn.style.animation = ''; }
+        App.showToast('Refreshed!', 'success');
+      },
+
       async openOrderDetail(orderId) {
+        this._currentOrderId = orderId;
         const order = await Cart.fetchOrderDetail(orderId);
         if (!order) return;
         const [messages, paymentHistory] = await Promise.all([
