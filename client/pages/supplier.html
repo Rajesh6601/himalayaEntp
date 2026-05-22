@@ -122,6 +122,7 @@
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
               <option value="disputed">Disputed</option>
+              <option value="payment_disputed">Payment Disputed</option>
             </select>
           </div>
           <div class="filter-group">
@@ -472,7 +473,10 @@
       async openOrderDetail(orderId) {
         const order = await Cart.fetchOrderDetail(orderId);
         if (!order) return;
-        const messages = await Cart.fetchOrderMessages(orderId);
+        const [messages, paymentHistory] = await Promise.all([
+          Cart.fetchOrderMessages(orderId),
+          Cart.fetchPaymentHistory(orderId)
+        ]);
         const body = document.getElementById('orderDetailBody');
         document.getElementById('orderDetailTitle').textContent = order.id + ' - ' + (order.type === 'rfq' ? 'RFQ' : 'Inquiry');
 
@@ -489,10 +493,19 @@
           advance_payment: 'Advance Payment', invoice: 'Invoice Created',
           dispatch: 'Dispatched', grn: 'GRN Recorded',
           qc_approved: 'QC Approved', qc_rejected: 'QC Rejected',
-          balance_payment: 'Balance Payment', dispute_response: 'Dispute Response'
+          balance_payment: 'Balance Payment', dispute_response: 'Dispute Response',
+          advance_payment_confirmed: 'Advance Confirmed', advance_payment_disputed: 'Advance Disputed',
+          balance_payment_confirmed: 'Balance Confirmed', balance_payment_disputed: 'Balance Disputed'
         };
 
-        const poStatuses = ['po_issued', 'advance_paid', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed'];
+        // Payment calculations
+        const invoiceTotal = order.invoice ? Number(order.invoice.grand_total) : 0;
+        const totalDue = invoiceTotal || Math.round((order.totalValue || order.latestQuote || 0) * 1.18 * 100) / 100;
+        const totalPaid = order.advancePaid + order.balancePaid;
+        const outstanding = Math.max(0, totalDue - totalPaid);
+        const showPaymentTracking = ['advance_paid', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed', 'payment_disputed'].includes(order.status);
+
+        const poStatuses = ['po_issued', 'advance_paid', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed', 'payment_disputed'];
         const canCreateInvoice = ['po_issued', 'advance_paid', 'in-progress'].includes(order.status) && !order.invoice;
         const canDispatch = ['invoiced', 'in-progress'].includes(order.status);
 
@@ -528,6 +541,68 @@
             ${Cart.renderStatusTimeline(order.status)}
             ${order.latestQuote ? `<p style="margin-top:8px;font-size:0.9rem;"><strong>Latest quoted price:</strong> ${App.formatCurrency(order.latestQuote)}</p>` : ''}
           </div>
+
+          <!-- Payment Tracking Panel -->
+          ${showPaymentTracking ? `
+          <div style="margin-bottom:20px;padding:16px;background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius);">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">Payment Tracking</h4>
+            <div class="order-info-grid">
+              <div class="order-info-item"><label>Total Due</label><span><strong>${App.formatCurrency(totalDue)}</strong></span></div>
+              <div class="order-info-item"><label>Advance Received</label><span>${App.formatCurrency(order.advancePaid)} ${order.advanceConfirmed ? '<span class="badge badge-green" style="font-size:0.7rem;">Confirmed</span>' : (order.advancePaid > 0 ? '<span class="badge badge-yellow" style="font-size:0.7rem;">Pending</span>' : '')}</span></div>
+              <div class="order-info-item"><label>Balance Received</label><span>${App.formatCurrency(order.balancePaid)} ${order.balanceConfirmed ? '<span class="badge badge-green" style="font-size:0.7rem;">Confirmed</span>' : (order.balancePaid > 0 ? '<span class="badge badge-yellow" style="font-size:0.7rem;">Pending</span>' : '')}</span></div>
+              <div class="order-info-item"><label>Outstanding</label><span style="color:${outstanding > 0 ? 'var(--primary)' : 'var(--green)'};font-weight:600;">${App.formatCurrency(outstanding)}</span></div>
+            </div>
+            ${(paymentHistory.advance.length > 0 || paymentHistory.balance.length > 0) ? `
+            <h4 style="font-size:0.85rem;margin-top:16px;margin-bottom:8px;">Payment History</h4>
+            <table class="data-table" style="font-size:0.82rem;">
+              <thead><tr><th>Type</th><th>Amount</th><th>Status</th><th>Date</th><th>Ref / Note</th></tr></thead>
+              <tbody>
+                ${[...paymentHistory.advance.map(p => ({...p, payType: 'Advance'})), ...paymentHistory.balance.map(p => ({...p, payType: 'Balance'}))].sort((a,b) => new Date(a.date) - new Date(b.date)).map(p => `
+                  <tr>
+                    <td>${p.payType}</td>
+                    <td>${App.formatCurrency(p.amount)}</td>
+                    <td>${p.status === 'confirmed' ? '<span class="badge badge-green">Confirmed</span>' : p.status === 'disputed' ? '<span class="badge badge-red">Disputed</span>' : '<span class="badge badge-yellow">Pending</span>'}</td>
+                    <td>${new Date(p.date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</td>
+                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.message || '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>` : ''}
+          </div>` : ''}
+
+          <!-- Advance Payment Confirmation (supplier action) -->
+          ${order.status === 'advance_paid' && !order.advanceConfirmed && order.advancePaid > 0 ? (() => {
+            const pendingAdv = paymentHistory.advance.filter(p => p.status === 'pending');
+            const newAdvAmt = pendingAdv.length > 0 ? pendingAdv[pendingAdv.length - 1].amount : order.advancePaid;
+            const prevConfirmedAdv = paymentHistory.summary.totalConfirmedAdvance || 0;
+            return `
+          <div class="action-panel" style="margin-bottom:16px;border-left:3px solid var(--blue);">
+            <h4 style="font-size:0.9rem;margin-bottom:8px;">Confirm Advance Payment</h4>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:8px;">New advance payment: <strong>${App.formatCurrency(newAdvAmt)}</strong></p>
+            ${prevConfirmedAdv > 0 ? `<p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:12px;">Previously confirmed: ${App.formatCurrency(prevConfirmedAdv)}</p>` : ''}
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-success btn-sm" onclick="SupplierDash.confirmAdvancePayment('${orderId}')">Confirm Receipt</button>
+              <button class="btn btn-danger btn-sm" onclick="SupplierDash.disputeAdvancePayment('${orderId}')">Dispute Payment</button>
+            </div>
+          </div>`;
+          })() : ''}
+
+          <!-- Balance Payment Confirmation (supplier action) -->
+          ${order.status === 'qc_approved' && !order.balanceConfirmed && order.balancePaid > 0 ? (() => {
+            const pendingBal = paymentHistory.balance.filter(p => p.status === 'pending');
+            const newBalAmt = pendingBal.length > 0 ? pendingBal[pendingBal.length - 1].amount : order.balancePaid;
+            const prevConfirmedBal = paymentHistory.summary.totalConfirmedBalance || 0;
+            return `
+          <div class="action-panel" style="margin-bottom:16px;border-left:3px solid var(--blue);">
+            <h4 style="font-size:0.9rem;margin-bottom:8px;">Confirm Balance Payment</h4>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:8px;">New balance payment: <strong>${App.formatCurrency(newBalAmt)}</strong></p>
+            ${prevConfirmedBal > 0 ? `<p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:12px;">Previously confirmed: ${App.formatCurrency(prevConfirmedBal)}</p>` : ''}
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-success btn-sm" onclick="SupplierDash.confirmBalancePayment('${orderId}')">Confirm Receipt</button>
+              <button class="btn btn-danger btn-sm" onclick="SupplierDash.disputeBalancePayment('${orderId}')">Dispute Payment</button>
+            </div>
+          </div>`;
+          })() : ''}
 
           <!-- Order Thread -->
           <div style="margin-bottom:20px;">
@@ -636,6 +711,14 @@
               </div>
               <button type="submit" class="btn btn-primary btn-sm">Record Dispatch</button>
             </form>
+          </div>` : ''}
+
+          <!-- Payment Dispute Response -->
+          ${order.status === 'payment_disputed' ? `
+          <div class="action-panel" style="margin-top:12px;">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">Payment Dispute</h4>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">A payment has been disputed. The buyer needs to re-record the correct payment.</p>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="SupplierDash.addComment('${orderId}')">Add Comment</button>
           </div>` : ''}
 
           <!-- Dispute Response -->
@@ -887,6 +970,65 @@
         if (result) {
           App.showToast('Dispute response sent.', 'success');
           await this.openOrderDetail(orderId);
+        }
+      },
+
+      async confirmAdvancePayment(orderId) {
+        if (!confirm('Confirm that you have received the advance payment?')) return;
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'advance_payment_confirmed',
+          message: 'Advance payment receipt confirmed by supplier.'
+        });
+        if (result) {
+          App.showToast('Advance payment confirmed!', 'success');
+          await this.openOrderDetail(orderId);
+          await this.renderOrders();
+        }
+      },
+
+      async disputeAdvancePayment(orderId) {
+        const reason = prompt('Reason for disputing the advance payment:');
+        if (!reason || !reason.trim()) return;
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'advance_payment_disputed',
+          message: 'Advance payment disputed: ' + reason.trim()
+        });
+        if (result) {
+          App.showToast('Payment disputed. Buyer will be notified.', 'info');
+          await this.openOrderDetail(orderId);
+          await this.renderOrders();
+        }
+      },
+
+      async confirmBalancePayment(orderId) {
+        if (!confirm('Confirm that you have received the balance payment?')) return;
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'balance_payment_confirmed',
+          message: 'Balance payment receipt confirmed by supplier.'
+        });
+        if (result) {
+          if (result.new_status === 'completed') {
+            App.showToast('Balance confirmed! Order completed.', 'success');
+          } else {
+            App.showToast('Balance confirmed! Awaiting full payment.', 'success');
+          }
+          await this.openOrderDetail(orderId);
+          await this.renderOrders();
+          await this.renderOverview();
+        }
+      },
+
+      async disputeBalancePayment(orderId) {
+        const reason = prompt('Reason for disputing the balance payment:');
+        if (!reason || !reason.trim()) return;
+        const result = await Cart.sendOrderMessage(orderId, {
+          type: 'balance_payment_disputed',
+          message: 'Balance payment disputed: ' + reason.trim()
+        });
+        if (result) {
+          App.showToast('Payment disputed. Buyer will be notified.', 'info');
+          await this.openOrderDetail(orderId);
+          await this.renderOrders();
         }
       },
 

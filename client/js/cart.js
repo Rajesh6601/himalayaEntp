@@ -319,6 +319,8 @@ const Cart = {
         messageCount: o.message_count,
         advancePaid: Number(o.advance_paid || 0),
         balancePaid: Number(o.balance_paid || 0),
+        advanceConfirmed: !!o.advance_confirmed,
+        balanceConfirmed: !!o.balance_confirmed,
         invoice: o.invoice || null,
         createdAt: o.created_at,
         updatedAt: o.updated_at
@@ -351,6 +353,14 @@ const Cart = {
     }
   },
 
+  async fetchPaymentHistory(orderId) {
+    try {
+      return await API.get('/orders/' + orderId + '/payment-history');
+    } catch (err) {
+      return { advance: [], balance: [], summary: {} };
+    }
+  },
+
   async sendOrderMessage(orderId, data) {
     try {
       const result = await API.post('/orders/' + orderId + '/messages', data);
@@ -377,7 +387,8 @@ const Cart = {
       qc_approved: '<span class="badge badge-green">QC Approved</span>',
       completed: '<span class="badge badge-green">Completed</span>',
       cancelled: '<span class="badge badge-red">Cancelled</span>',
-      disputed: '<span class="badge badge-orange">Disputed</span>'
+      disputed: '<span class="badge badge-orange">Disputed</span>',
+      payment_disputed: '<span class="badge badge-orange">Payment Disputed</span>'
     };
     return labels[status] || status;
   },
@@ -404,7 +415,7 @@ const Cart = {
     let currentIdx = allKeys.indexOf(status);
     if (status === 'negotiating') currentIdx = allKeys.indexOf('quoted');
     if (status === 'confirmed') currentIdx = allKeys.indexOf('in-progress');
-    if (status === 'cancelled' || status === 'disputed') currentIdx = -1;
+    if (status === 'cancelled' || status === 'disputed' || status === 'payment_disputed') currentIdx = -1;
 
     function renderRow(steps, offset) {
       return steps.map((s, i) => {
@@ -422,6 +433,7 @@ const Cart = {
     let extra = '';
     if (status === 'cancelled') extra = '<div style="margin-top:6px;"><span class="badge badge-red">Cancelled</span></div>';
     if (status === 'disputed') extra = '<div style="margin-top:6px;"><span class="badge badge-orange">Disputed</span></div>';
+    if (status === 'payment_disputed') extra = '<div style="margin-top:6px;"><span class="badge badge-orange">Payment Disputed</span></div>';
 
     return `<div class="status-timeline-wrap">
       <div class="status-timeline">${renderRow(row1, 0)}</div>

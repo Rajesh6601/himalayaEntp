@@ -61,9 +61,11 @@ CREATE TABLE orders (
     buyer_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     type        VARCHAR(10) NOT NULL CHECK (type IN ('inquiry', 'rfq')),
     status      VARCHAR(20) NOT NULL DEFAULT 'pending'
-                CHECK (status IN ('pending', 'quoted', 'negotiating', 'accepted', 'po_issued', 'advance_paid', 'confirmed', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed', 'cancelled', 'disputed')),
+                CHECK (status IN ('pending', 'quoted', 'negotiating', 'accepted', 'po_issued', 'advance_paid', 'confirmed', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed', 'cancelled', 'disputed', 'payment_disputed')),
     advance_paid NUMERIC(14, 2) DEFAULT 0,
     balance_paid NUMERIC(14, 2) DEFAULT 0,
+    advance_confirmed BOOLEAN DEFAULT FALSE,
+    balance_confirmed BOOLEAN DEFAULT FALSE,
     notes       TEXT,
     total_value NUMERIC(14, 2) DEFAULT 0,
     created_at  TIMESTAMPTZ DEFAULT NOW(),
@@ -94,8 +96,8 @@ CREATE TABLE order_messages (
     order_id        VARCHAR(30) NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     sender_id       UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     sender_role     VARCHAR(20) NOT NULL CHECK (sender_role IN ('buyer', 'supplier', 'admin')),
-    type            VARCHAR(20) NOT NULL
-                    CHECK (type IN ('quote', 'counter_offer', 'comment', 'acceptance', 'rejection', 'advance_payment', 'invoice', 'dispatch', 'grn', 'qc_approved', 'qc_rejected', 'balance_payment', 'dispute_response')),
+    type            VARCHAR(30) NOT NULL
+                    CHECK (type IN ('quote', 'counter_offer', 'comment', 'acceptance', 'rejection', 'advance_payment', 'invoice', 'dispatch', 'grn', 'qc_approved', 'qc_rejected', 'balance_payment', 'dispute_response', 'advance_payment_confirmed', 'advance_payment_disputed', 'balance_payment_confirmed', 'balance_payment_disputed')),
     quoted_price    NUMERIC(14, 2),
     delivery_estimate VARCHAR(100),
     message         TEXT,

@@ -346,8 +346,13 @@ Buyer performs Quality Inspection
     ↓
 If QC approved → Status: QC Approved
     ↓
-Buyer releases balance payment (Total - Advance Paid = Balance Due)
-    → Status: Completed (balance amount stored in orders.balance_paid)
+Buyer records balance payment (amount accumulates in orders.balance_paid)
+    → Status stays QC Approved (awaiting supplier confirmation)
+    ↓
+Supplier confirms/disputes payment:
+    ✓ Confirms → If fully paid (>=99% of total due) → Status: Completed
+                  If partially paid → stays QC Approved (buyer pays more)
+    ✗ Disputes → Status: Payment Disputed (buyer re-records correct amount)
     ↓
 If QC rejected → Buyer raises dispute with remarks
     → Status: Disputed → Supplier responds with dispute_response
@@ -362,15 +367,16 @@ If QC rejected → Buyer raises dispute with remarks
 | 3 | `negotiating` | Either | Counter-offers exchanged |
 | 4 | `accepted` | Buyer | Buyer accepts final price |
 | 5 | `po_issued` | Buyer | Formal Purchase Order generated (PDF) |
-| 6 | `advance_paid` | Buyer | Advance payment confirmed (amount stored in orders.advance_paid) |
+| 6 | `advance_paid` | Buyer | Advance payment recorded (amount accumulates in orders.advance_paid) |
 | 7 | `in-progress` | Supplier | Manufacturing/fabrication started |
 | 8 | `invoiced` | Supplier | Invoice raised against PO (GST-compliant with line items) |
 | 9 | `dispatched` | Supplier | Goods shipped with delivery challan (vehicle, date, challan no.) |
 | 10 | `delivered` | Buyer | Buyer records GRN — goods received (date, condition, remarks) |
 | 11 | `qc_approved` | Buyer | Quality inspection passed |
-| 12 | `completed` | Buyer | Balance payment released (balance = total - advance), order closed |
+| 12 | `completed` | Supplier | Supplier confirms balance, total payments >= total due, order closed |
 | — | `cancelled` | Either | Order cancelled at any pre-dispatch stage |
 | — | `disputed` | Buyer | QC failed, dispute raised for resolution |
+| — | `payment_disputed` | Supplier | Supplier disputes a payment amount, buyer must re-record |
 
 ### Key Documents in the Workflow
 
@@ -385,26 +391,50 @@ If QC rejected → Buyer raises dispute with remarks
 
 ### Payment Flow (Implemented)
 
-**Advance Payment (Buyer → Supplier):**
+**Two-Step Payment Confirmation:**
+All payments follow a two-step process: (1) buyer records the payment, (2) supplier confirms or disputes receipt. This prevents premature order completion from incorrect payment amounts.
+
+**Advance Payment (Buyer → Supplier → Confirmation):**
 - Triggered when order status is `po_issued`
 - Buyer enters advance amount (placeholder suggests 50% of PO value) and optional UTR/transaction reference
-- Backend stores amount in `orders.advance_paid` column and transitions status to `advance_paid`
-- Role-restricted: only buyers can send `advance_payment` messages
+- Backend accumulates amount: `advance_paid = COALESCE(advance_paid,0) + amount`
+- Status transitions to `advance_paid`
+- Supplier sees "Confirm Advance Payment" panel with Confirm/Dispute buttons
+- Confirm → sets `advance_confirmed = TRUE`, status stays `advance_paid`
+- Dispute → status becomes `payment_disputed`, buyer must re-record
 
-**Balance Payment (Buyer → Supplier):**
-- Triggered when order status is `qc_approved` (after goods received and QC passed)
-- UI displays: `Advance Paid: ₹X | Balance Due: ₹(Total - Advance)`
-- Balance amount auto-calculated: `PO Total Value - Advance Paid`
-- Backend stores amount in `orders.balance_paid` column and transitions status to `completed`
-- Role-restricted: only buyers can send `balance_payment` messages
+**Balance Payment (Buyer → Supplier → Confirmation):**
+- Triggered when order status is `qc_approved` or `payment_disputed`
+- UI displays Payment Summary: Total Due, Advance Paid, Balance Paid, Remaining
+- Balance amount pre-filled as `totalDue - advancePaid - balancePaid`
+- Backend accumulates: `balance_paid = COALESCE(balance_paid,0) + amount`
+- Status stays `qc_approved` (does NOT auto-complete)
+- Supplier sees "Confirm Balance Payment" panel with Confirm/Dispute buttons
+- Confirm → sets `balance_confirmed = TRUE`, checks if total payments >= 99% of total due
+  - If fully paid → status becomes `completed`
+  - If partially paid → stays `qc_approved` (buyer pays more)
+- Dispute → status becomes `payment_disputed`, buyer must re-record
+
+**Payment Dispute Flow:**
+- Status `payment_disputed` is set when supplier disputes any payment
+- Buyer can re-record payment from `payment_disputed` status
+- Re-recording resets to `qc_approved` and clears `balance_confirmed`
+- Supplier can then confirm/dispute again
+
+**Payment Tracking Panel (Both Dashboards):**
+- Visible from `advance_paid` status onwards
+- Shows: Total Due, Advance Received/Paid, Balance Received/Paid, Outstanding/Remaining
+- Each payment shows confirmation status badge (Confirmed/Pending/Awaiting Confirmation)
 
 **Invoice PDF Payment Display:**
-- Invoice PDF shows `Advance Received: ₹X | Balance Due: ₹(Grand Total - Advance Paid)`
+- Invoice PDF shows `Advance Received: ₹X | Balance Received: ₹Y | Outstanding: ₹Z`
 - Payment terms displayed from invoice record (default: "50% advance, 50% on delivery after QC")
 
 **Database Columns (orders table):**
-- `advance_paid NUMERIC(14,2) DEFAULT 0` — stores advance payment amount
-- `balance_paid NUMERIC(14,2) DEFAULT 0` — stores balance payment amount
+- `advance_paid NUMERIC(14,2) DEFAULT 0` — accumulates advance payment amounts
+- `balance_paid NUMERIC(14,2) DEFAULT 0` — accumulates balance payment amounts
+- `advance_confirmed BOOLEAN DEFAULT FALSE` — supplier confirmed advance receipt
+- `balance_confirmed BOOLEAN DEFAULT FALSE` — supplier confirmed balance receipt
 
 **Invoice vs PO Validation (Implemented):**
 - Server rejects invoice if subtotal exceeds PO value by more than 5% tolerance

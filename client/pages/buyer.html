@@ -139,6 +139,7 @@
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
               <option value="disputed">Disputed</option>
+              <option value="payment_disputed">Payment Disputed</option>
             </select>
           </div>
           <div class="filter-group">
@@ -543,7 +544,10 @@
       async openOrderDetail(orderId) {
         const order = await Cart.fetchOrderDetail(orderId);
         if (!order) return;
-        const messages = await Cart.fetchOrderMessages(orderId);
+        const [messages, paymentHistory] = await Promise.all([
+          Cart.fetchOrderMessages(orderId),
+          Cart.fetchPaymentHistory(orderId)
+        ]);
         const body = document.getElementById('negModalBody');
         document.getElementById('negModalTitle').textContent = order.id;
 
@@ -558,10 +562,19 @@
           advance_payment: 'Advance Payment', invoice: 'Invoice Created',
           dispatch: 'Dispatched', grn: 'GRN Recorded',
           qc_approved: 'QC Approved', qc_rejected: 'QC Rejected',
-          balance_payment: 'Balance Payment', dispute_response: 'Dispute Response'
+          balance_payment: 'Balance Payment', dispute_response: 'Dispute Response',
+          advance_payment_confirmed: 'Advance Confirmed', advance_payment_disputed: 'Advance Disputed',
+          balance_payment_confirmed: 'Balance Confirmed', balance_payment_disputed: 'Balance Disputed'
         };
 
-        const poStatuses = ['po_issued', 'advance_paid', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed'];
+        // Payment calculations
+        const invoiceTotal = order.invoice ? Number(order.invoice.grand_total) : 0;
+        const totalDue = invoiceTotal || Math.round((order.totalValue || order.latestQuote || 0) * 1.18 * 100) / 100;
+        const totalPaid = order.advancePaid + order.balancePaid;
+        const remaining = Math.max(0, Math.round((totalDue - totalPaid) * 100) / 100);
+        const showPaymentSummary = ['advance_paid', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed', 'payment_disputed'].includes(order.status);
+
+        const poStatuses = ['po_issued', 'advance_paid', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed', 'payment_disputed'];
 
         body.innerHTML = `
           <!-- Status & Items -->
@@ -580,6 +593,34 @@
             ${order.notes ? `<p style="margin-top:8px;font-size:0.85rem;color:var(--text-light);"><strong>Notes:</strong> ${order.notes}</p>` : ''}
             ${order.latestQuote ? `<p style="margin-top:8px;font-size:1rem;"><strong>Latest Quote:</strong> ${App.formatCurrency(order.latestQuote)}</p>` : ''}
           </div>
+
+          <!-- Payment Summary Panel -->
+          ${showPaymentSummary ? `
+          <div style="margin-bottom:20px;padding:16px;background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius);">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">Payment Summary</h4>
+            <div class="order-info-grid">
+              <div class="order-info-item"><label>Total Due</label><span><strong>${App.formatCurrency(totalDue)}</strong></span></div>
+              <div class="order-info-item"><label>Advance Paid</label><span>${App.formatCurrency(order.advancePaid)} ${order.advanceConfirmed ? '<span class="badge badge-green" style="font-size:0.7rem;">Confirmed</span>' : (order.advancePaid > 0 ? '<span class="badge badge-yellow" style="font-size:0.7rem;">Awaiting Confirmation</span>' : '')}</span></div>
+              <div class="order-info-item"><label>Balance Paid</label><span>${App.formatCurrency(order.balancePaid)} ${order.balanceConfirmed ? '<span class="badge badge-green" style="font-size:0.7rem;">Confirmed</span>' : (order.balancePaid > 0 ? '<span class="badge badge-yellow" style="font-size:0.7rem;">Awaiting Confirmation</span>' : '')}</span></div>
+              <div class="order-info-item"><label>Remaining</label><span style="color:${remaining > 0 ? 'var(--primary)' : 'var(--green)'};font-weight:600;">${App.formatCurrency(remaining)}</span></div>
+            </div>
+            ${(paymentHistory.advance.length > 0 || paymentHistory.balance.length > 0) ? `
+            <h4 style="font-size:0.85rem;margin-top:16px;margin-bottom:8px;">Payment History</h4>
+            <table class="data-table" style="font-size:0.82rem;">
+              <thead><tr><th>Type</th><th>Amount</th><th>Status</th><th>Date</th><th>Ref / Note</th></tr></thead>
+              <tbody>
+                ${[...paymentHistory.advance.map(p => ({...p, payType: 'Advance'})), ...paymentHistory.balance.map(p => ({...p, payType: 'Balance'}))].sort((a,b) => new Date(a.date) - new Date(b.date)).map(p => `
+                  <tr>
+                    <td>${p.payType}</td>
+                    <td>${App.formatCurrency(p.amount)}</td>
+                    <td>${p.status === 'confirmed' ? '<span class="badge badge-green">Confirmed</span>' : p.status === 'disputed' ? '<span class="badge badge-red">Disputed</span>' : '<span class="badge badge-yellow">Pending</span>'}</td>
+                    <td>${new Date(p.date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</td>
+                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.message || '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>` : ''}
+          </div>` : ''}
 
           <!-- Negotiation Thread -->
           <div style="margin-bottom:20px;">
@@ -663,6 +704,34 @@
             </form>
           </div>` : ''}
 
+          <!-- Advance Payment Re-record (after dispute) -->
+          ${order.status === 'payment_disputed' && paymentHistory.advance.some(p => p.status === 'disputed') && !paymentHistory.balance.some(p => p.status === 'disputed') ? (() => {
+            const lastDisputedAdv = paymentHistory.advance.filter(p => p.status === 'disputed').pop();
+            const confirmedAdvSoFar = paymentHistory.summary.totalConfirmedAdvance || 0;
+            return `
+          <div class="action-panel" style="margin-top:12px;">
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">Re-record Advance Payment (Disputed)</h4>
+            <div style="padding:12px;background:rgba(212,56,13,0.08);border:1px solid var(--primary);border-radius:var(--radius-sm);margin-bottom:12px;">
+              <p style="font-size:0.85rem;color:var(--primary);font-weight:600;margin-bottom:4px;">Disputed Amount: ${App.formatCurrency(lastDisputedAdv.amount)}</p>
+              ${paymentHistory.summary.lastDisputeReason ? `<p style="font-size:0.83rem;color:var(--text-light);">Reason: ${paymentHistory.summary.lastDisputeReason}</p>` : ''}
+            </div>
+            ${confirmedAdvSoFar > 0 ? `<p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">Previously confirmed advance: ${App.formatCurrency(confirmedAdvSoFar)}</p>` : ''}
+            <form onsubmit="BuyerDash.confirmAdvancePayment(event, '${orderId}')">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Amount Paid (&#8377;) *</label>
+                  <input type="number" id="advanceAmount" min="0" step="0.01" required value="${lastDisputedAdv.amount}">
+                </div>
+                <div class="form-group">
+                  <label>Payment Reference</label>
+                  <input type="text" id="advanceRef" placeholder="UTR / Transaction ID">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">Re-record Advance Payment</button>
+            </form>
+          </div>`;
+          })() : ''}
+
           <!-- GRN Recording -->
           ${order.status === 'dispatched' ? `
           <div class="action-panel" style="margin-top:12px;">
@@ -705,28 +774,38 @@
           </div>` : ''}
 
           <!-- Balance Payment -->
-          ${order.status === 'qc_approved' ? `
+          ${['qc_approved', 'payment_disputed'].includes(order.status) && remaining > 0 ? (() => {
+            const isBalDispute = order.status === 'payment_disputed' && paymentHistory.balance.some(p => p.status === 'disputed');
+            const lastDisputedBal = paymentHistory.balance.filter(p => p.status === 'disputed').pop();
+            const confirmedSoFar = (paymentHistory.summary.totalConfirmedAdvance || 0) + (paymentHistory.summary.totalConfirmedBalance || 0);
+            return `
           <div class="action-panel" style="margin-top:12px;">
-            <h4 style="font-size:0.9rem;margin-bottom:12px;">Release Balance Payment</h4>
+            <h4 style="font-size:0.9rem;margin-bottom:12px;">${isBalDispute ? 'Re-record Balance Payment (Disputed)' : 'Release Balance Payment'}</h4>
+            ${isBalDispute && lastDisputedBal ? `
+            <div style="padding:12px;background:rgba(212,56,13,0.08);border:1px solid var(--primary);border-radius:var(--radius-sm);margin-bottom:12px;">
+              <p style="font-size:0.85rem;color:var(--primary);font-weight:600;margin-bottom:4px;">Disputed Amount: ${App.formatCurrency(lastDisputedBal.amount)}</p>
+              ${paymentHistory.summary.lastDisputeReason ? `<p style="font-size:0.83rem;color:var(--text-light);">Reason: ${paymentHistory.summary.lastDisputeReason}</p>` : ''}
+            </div>` : ''}
             <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">
-              Total (incl. GST): ${App.formatCurrency(Math.round((order.totalValue || order.latestQuote || 0) * 1.18 * 100) / 100)} |
-              Advance Paid: ${App.formatCurrency(order.advancePaid)} |
-              Balance Due: <strong>${App.formatCurrency(Math.round(((order.totalValue || order.latestQuote || 0) * 1.18 - order.advancePaid) * 100) / 100)}</strong>
+              Total Due: ${App.formatCurrency(totalDue)} |
+              Confirmed So Far: ${App.formatCurrency(confirmedSoFar)} |
+              Remaining: <strong>${App.formatCurrency(remaining)}</strong>
             </p>
             <form onsubmit="BuyerDash.confirmBalancePayment(event, '${orderId}')">
               <div class="form-row">
                 <div class="form-group">
                   <label>Amount Paid (&#8377;) *</label>
-                  <input type="number" id="balanceAmount" min="0" step="0.01" required value="${Math.round(((order.totalValue || order.latestQuote || 0) * 1.18 - order.advancePaid) * 100) / 100}">
+                  <input type="number" id="balanceAmount" min="0" step="0.01" required value="${isBalDispute && lastDisputedBal ? lastDisputedBal.amount : remaining}">
                 </div>
                 <div class="form-group">
                   <label>Payment Reference</label>
                   <input type="text" id="balanceRef" placeholder="UTR / Transaction ID">
                 </div>
               </div>
-              <button type="submit" class="btn btn-primary btn-sm">Confirm Balance Payment</button>
+              <button type="submit" class="btn btn-primary btn-sm">Record Balance Payment</button>
             </form>
-          </div>` : ''}
+          </div>`;
+          })() : ''}
 
           <!-- PO Download -->
           ${poStatuses.includes(order.status) ? `
@@ -920,7 +999,7 @@
           message: 'Balance payment confirmed.' + (ref ? ' Ref: ' + ref : '')
         });
         if (result) {
-          App.showToast('Balance payment recorded! Order completed.', 'success');
+          App.showToast('Balance payment recorded! Awaiting supplier confirmation.', 'success');
           await this.openOrderDetail(orderId);
           await this.renderOrders();
           await this.renderOverview();

@@ -327,6 +327,101 @@ app.get('/api/orders/:id/messages', authenticate, async (req, res) => {
   }
 });
 
+// ── Payment History ──
+app.get('/api/orders/:id/payment-history', authenticate, async (req, res) => {
+  try {
+    // Access control
+    if (req.user.role === 'buyer') {
+      const orderCheck = await db.query('SELECT buyer_id FROM orders WHERE id = $1', [req.params.id]);
+      if (orderCheck.rows.length === 0) return res.status(404).json({ error: 'Order not found' });
+      if (orderCheck.rows[0].buyer_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const paymentTypes = ['advance_payment', 'advance_payment_confirmed', 'advance_payment_disputed',
+      'balance_payment', 'balance_payment_confirmed', 'balance_payment_disputed'];
+    const result = await db.query(
+      `SELECT m.id, m.type, m.quoted_price, m.message, m.created_at, u.name AS sender_name
+       FROM order_messages m JOIN users u ON m.sender_id = u.id
+       WHERE m.order_id = $1 AND m.type = ANY($2)
+       ORDER BY m.created_at ASC`,
+      [req.params.id, paymentTypes]
+    );
+
+    const advance = [];
+    const balance = [];
+    let lastPendingAdvance = null;
+    let lastPendingBalance = null;
+    let totalConfirmedAdvance = 0;
+    let totalConfirmedBalance = 0;
+    let totalDisputedAdvance = 0;
+    let totalDisputedBalance = 0;
+    let lastDisputeReason = null;
+
+    for (const row of result.rows) {
+      const entry = {
+        id: row.id,
+        type: row.type,
+        amount: row.quoted_price ? Number(row.quoted_price) : 0,
+        message: row.message,
+        date: row.created_at,
+        senderName: row.sender_name,
+        status: 'pending'
+      };
+
+      if (row.type === 'advance_payment') {
+        entry.status = 'pending';
+        lastPendingAdvance = entry;
+        advance.push(entry);
+      } else if (row.type === 'advance_payment_confirmed') {
+        if (lastPendingAdvance) {
+          lastPendingAdvance.status = 'confirmed';
+          totalConfirmedAdvance += lastPendingAdvance.amount;
+          lastPendingAdvance = null;
+        }
+        // Don't push confirm events as separate entries
+      } else if (row.type === 'advance_payment_disputed') {
+        if (lastPendingAdvance) {
+          lastPendingAdvance.status = 'disputed';
+          totalDisputedAdvance += lastPendingAdvance.amount;
+          lastDisputeReason = row.message;
+          lastPendingAdvance = null;
+        }
+      } else if (row.type === 'balance_payment') {
+        entry.status = 'pending';
+        lastPendingBalance = entry;
+        balance.push(entry);
+      } else if (row.type === 'balance_payment_confirmed') {
+        if (lastPendingBalance) {
+          lastPendingBalance.status = 'confirmed';
+          totalConfirmedBalance += lastPendingBalance.amount;
+          lastPendingBalance = null;
+        }
+      } else if (row.type === 'balance_payment_disputed') {
+        if (lastPendingBalance) {
+          lastPendingBalance.status = 'disputed';
+          totalDisputedBalance += lastPendingBalance.amount;
+          lastDisputeReason = row.message;
+          lastPendingBalance = null;
+        }
+      }
+    }
+
+    res.json({
+      advance,
+      balance,
+      summary: {
+        totalConfirmedAdvance,
+        totalConfirmedBalance,
+        totalDisputedAdvance,
+        totalDisputedBalance,
+        lastDisputeReason
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Purchase Order PDF ──
 function formatINR(num) {
   const n = Number(num);
@@ -367,7 +462,7 @@ app.get('/api/orders/:id/po', authenticate, async (req, res) => {
     }
 
     // 3. Status guard
-    const allowedStatuses = ['po_issued', 'advance_paid', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed'];
+    const allowedStatuses = ['po_issued', 'advance_paid', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed', 'payment_disputed'];
     if (!allowedStatuses.includes(order.status)) {
       return res.status(400).json({ error: 'PO can only be downloaded for orders with status: ' + allowedStatuses.join(', ') });
     }
@@ -639,7 +734,8 @@ app.get('/api/orders/:id/po', authenticate, async (req, res) => {
 app.post('/api/orders/:id/messages', authenticate, async (req, res) => {
   const { type, quoted_price, delivery_estimate, message } = req.body;
   const validTypes = ['quote', 'counter_offer', 'comment', 'acceptance', 'rejection',
-    'advance_payment', 'invoice', 'dispatch', 'grn', 'qc_approved', 'qc_rejected', 'balance_payment', 'dispute_response'];
+    'advance_payment', 'invoice', 'dispatch', 'grn', 'qc_approved', 'qc_rejected', 'balance_payment', 'dispute_response',
+    'advance_payment_confirmed', 'advance_payment_disputed', 'balance_payment_confirmed', 'balance_payment_disputed'];
   if (!validTypes.includes(type)) return res.status(400).json({ error: 'Invalid message type' });
 
   const client = await db.pool.connect();
@@ -664,7 +760,8 @@ app.post('/api/orders/:id/messages', authenticate, async (req, res) => {
 
     // Role validation for message types
     const buyerOnlyTypes = ['counter_offer', 'advance_payment', 'grn', 'qc_approved', 'qc_rejected', 'balance_payment'];
-    const supplierOnlyTypes = ['quote', 'invoice', 'dispatch', 'dispute_response'];
+    const supplierOnlyTypes = ['quote', 'invoice', 'dispatch', 'dispute_response',
+      'advance_payment_confirmed', 'advance_payment_disputed', 'balance_payment_confirmed', 'balance_payment_disputed'];
 
     if (buyerOnlyTypes.includes(type) && req.user.role !== 'buyer') {
       await client.query('ROLLBACK');
@@ -697,10 +794,10 @@ app.post('/api/orders/:id/messages', authenticate, async (req, res) => {
     }
 
     // P2P lifecycle transitions
-    if (type === 'advance_payment' && order.status === 'po_issued') {
+    if (type === 'advance_payment' && ['po_issued', 'payment_disputed'].includes(order.status)) {
       newStatus = 'advance_paid';
       if (quoted_price) {
-        await client.query('UPDATE orders SET advance_paid = $1 WHERE id = $2', [quoted_price, req.params.id]);
+        await client.query('UPDATE orders SET advance_paid = COALESCE(advance_paid,0) + $1, advance_confirmed = FALSE WHERE id = $2', [quoted_price, req.params.id]);
       }
     } else if (type === 'dispatch' && ['invoiced', 'in-progress'].includes(order.status)) {
       newStatus = 'dispatched';
@@ -710,11 +807,58 @@ app.post('/api/orders/:id/messages', authenticate, async (req, res) => {
       newStatus = 'qc_approved';
     } else if (type === 'qc_rejected' && order.status === 'delivered') {
       newStatus = 'disputed';
-    } else if (type === 'balance_payment' && order.status === 'qc_approved') {
-      newStatus = 'completed';
+    } else if (type === 'balance_payment' && ['qc_approved', 'payment_disputed'].includes(order.status)) {
+      // Balance payments accumulate; status stays qc_approved until supplier confirms
+      newStatus = 'qc_approved';
       if (quoted_price) {
-        await client.query('UPDATE orders SET balance_paid = $1 WHERE id = $2', [quoted_price, req.params.id]);
+        await client.query('UPDATE orders SET balance_paid = COALESCE(balance_paid,0) + $1, balance_confirmed = FALSE WHERE id = $2', [quoted_price, req.params.id]);
       }
+    } else if (type === 'advance_payment_confirmed' && order.status === 'advance_paid') {
+      // Supplier confirms advance payment receipt
+      await client.query('UPDATE orders SET advance_confirmed = TRUE WHERE id = $1', [req.params.id]);
+    } else if (type === 'advance_payment_disputed' && order.status === 'advance_paid') {
+      // Supplier disputes advance payment — reverse the last advance amount
+      const lastAdvance = await client.query(
+        `SELECT quoted_price FROM order_messages WHERE order_id = $1 AND type = 'advance_payment' AND quoted_price IS NOT NULL ORDER BY created_at DESC LIMIT 1`,
+        [req.params.id]
+      );
+      const disputedAmt = lastAdvance.rows.length > 0 ? Number(lastAdvance.rows[0].quoted_price) : 0;
+      if (disputedAmt > 0) {
+        await client.query('UPDATE orders SET advance_paid = GREATEST(COALESCE(advance_paid,0) - $1, 0), advance_confirmed = FALSE WHERE id = $2', [disputedAmt, req.params.id]);
+      }
+      newStatus = 'payment_disputed';
+    } else if (type === 'balance_payment_confirmed' && order.status === 'qc_approved') {
+      // Supplier confirms balance payment receipt — check if fully paid
+      await client.query('UPDATE orders SET balance_confirmed = TRUE WHERE id = $1', [req.params.id]);
+      // Re-fetch order to get updated totals
+      const updatedOrder = await client.query('SELECT * FROM orders WHERE id = $1', [req.params.id]);
+      const ord = updatedOrder.rows[0];
+      const advPaid = Number(ord.advance_paid || 0);
+      const balPaid = Number(ord.balance_paid || 0);
+      const totalPaid = advPaid + balPaid;
+      // Determine total due: use invoice grand_total if available, otherwise PO value * 1.18
+      const invResult = await client.query('SELECT grand_total FROM invoices WHERE order_id = $1 LIMIT 1', [req.params.id]);
+      let totalDue;
+      if (invResult.rows.length > 0) {
+        totalDue = Number(invResult.rows[0].grand_total);
+      } else {
+        totalDue = Number(ord.total_value || 0) * 1.18;
+      }
+      // 1% tolerance for rounding
+      if (totalDue > 0 && totalPaid >= totalDue * 0.99) {
+        newStatus = 'completed';
+      }
+    } else if (type === 'balance_payment_disputed' && order.status === 'qc_approved') {
+      // Supplier disputes balance payment — reverse the last balance amount
+      const lastBalance = await client.query(
+        `SELECT quoted_price FROM order_messages WHERE order_id = $1 AND type = 'balance_payment' AND quoted_price IS NOT NULL ORDER BY created_at DESC LIMIT 1`,
+        [req.params.id]
+      );
+      const disputedBalAmt = lastBalance.rows.length > 0 ? Number(lastBalance.rows[0].quoted_price) : 0;
+      if (disputedBalAmt > 0) {
+        await client.query('UPDATE orders SET balance_paid = GREATEST(COALESCE(balance_paid,0) - $1, 0), balance_confirmed = FALSE WHERE id = $2', [disputedBalAmt, req.params.id]);
+      }
+      newStatus = 'payment_disputed';
     }
     // dispute_response on disputed -> stays disputed (supplier responds, status unchanged)
 
@@ -749,7 +893,7 @@ app.post('/api/orders/:id/messages', authenticate, async (req, res) => {
 
 app.patch('/api/orders/:id/status', authenticate, async (req, res) => {
   const { status } = req.body;
-  const validStatuses = ['pending', 'quoted', 'negotiating', 'accepted', 'po_issued', 'advance_paid', 'confirmed', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed', 'cancelled', 'disputed'];
+  const validStatuses = ['pending', 'quoted', 'negotiating', 'accepted', 'po_issued', 'advance_paid', 'confirmed', 'in-progress', 'invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed', 'cancelled', 'disputed', 'payment_disputed'];
   if (!validStatuses.includes(status)) return res.status(400).json({ error: 'Invalid status' });
 
   // Transition guard map
@@ -759,13 +903,14 @@ app.patch('/api/orders/:id/status', authenticate, async (req, res) => {
     'negotiating':  ['quoted', 'negotiating', 'accepted', 'cancelled'],
     'accepted':     ['po_issued', 'cancelled'],
     'po_issued':    ['advance_paid', 'in-progress', 'cancelled'],
-    'advance_paid': ['in-progress', 'cancelled'],
+    'advance_paid': ['in-progress', 'payment_disputed', 'cancelled'],
     'in-progress':  ['invoiced', 'completed', 'cancelled'],
     'invoiced':     ['dispatched', 'cancelled'],
     'dispatched':   ['delivered'],
     'delivered':    ['qc_approved', 'disputed'],
-    'qc_approved':  ['completed'],
+    'qc_approved':  ['completed', 'payment_disputed'],
     'disputed':     ['in-progress', 'cancelled'],
+    'payment_disputed': ['qc_approved', 'advance_paid', 'cancelled'],
     'completed':    [],
     'cancelled':    []
   };
@@ -1004,7 +1149,7 @@ app.get('/api/orders/:id/invoice', authenticate, async (req, res) => {
     }
 
     // Status guard
-    const allowedStatuses = ['invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed'];
+    const allowedStatuses = ['invoiced', 'dispatched', 'delivered', 'qc_approved', 'completed', 'payment_disputed'];
     if (!allowedStatuses.includes(order.status)) {
       return res.status(400).json({ error: 'Invoice PDF available for statuses: ' + allowedStatuses.join(', ') });
     }
@@ -1200,8 +1345,10 @@ app.get('/api/orders/:id/invoice', authenticate, async (req, res) => {
       y += 14;
     }
     const advPaid = Number(order.advance_paid || 0);
-    const balDue = Number(invoice.grand_total) - advPaid;
-    doc.text(`Advance Received: ${formatINR(advPaid)}  |  Balance Due: ${formatINR(balDue)}`, leftCol, y, { width: pageWidth });
+    const balPaid = Number(order.balance_paid || 0);
+    const totalPaid = advPaid + balPaid;
+    const remaining = Number(invoice.grand_total) - totalPaid;
+    doc.text(`Advance Received: ${formatINR(advPaid)}  |  Balance Received: ${formatINR(balPaid)}  |  Outstanding: ${formatINR(Math.max(0, remaining))}`, leftCol, y, { width: pageWidth });
 
     // ── Bank Details ──
     y += 20;
