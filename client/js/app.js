@@ -30,8 +30,18 @@ const API = {
     return h;
   },
 
+  _handle401() {
+    this.setToken(null);
+    localStorage.removeItem('he-session');
+    App.showToast('Session expired. Please login again.', 'warning');
+    setTimeout(() => {
+      window.location.href = window.location.pathname.includes('/pages/') ? '../index.html' : 'index.html';
+    }, 1500);
+  },
+
   async get(path) {
     const r = await fetch(this.BASE + path, { headers: this.headers() });
+    if (r.status === 401) { this._handle401(); throw new Error('Session expired'); }
     if (!r.ok) throw new Error((await r.json()).error || r.statusText);
     return r.json();
   },
@@ -39,6 +49,7 @@ const API = {
   async post(path, body) {
     const r = await fetch(this.BASE + path, { method: 'POST', headers: this.headers(), body: JSON.stringify(body) });
     const data = await r.json();
+    if (r.status === 401) { this._handle401(); throw new Error('Session expired'); }
     if (!r.ok) throw new Error(data.error || r.statusText);
     return data;
   },
@@ -46,6 +57,7 @@ const API = {
   async put(path, body) {
     const r = await fetch(this.BASE + path, { method: 'PUT', headers: this.headers(), body: JSON.stringify(body) });
     const data = await r.json();
+    if (r.status === 401) { this._handle401(); throw new Error('Session expired'); }
     if (!r.ok) throw new Error(data.error || r.statusText);
     return data;
   },
@@ -53,12 +65,14 @@ const API = {
   async patch(path, body) {
     const r = await fetch(this.BASE + path, { method: 'PATCH', headers: this.headers(), body: JSON.stringify(body) });
     const data = await r.json();
+    if (r.status === 401) { this._handle401(); throw new Error('Session expired'); }
     if (!r.ok) throw new Error(data.error || r.statusText);
     return data;
   },
 
   async del(path) {
     const r = await fetch(this.BASE + path, { method: 'DELETE', headers: this.headers() });
+    if (r.status === 401) { this._handle401(); throw new Error('Session expired'); }
     if (!r.ok) throw new Error((await r.json()).error || r.statusText);
     return r.json();
   }
