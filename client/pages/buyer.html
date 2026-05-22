@@ -393,7 +393,8 @@
           return;
         }
 
-        container.innerHTML = orders.reverse().map(o => {
+        orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        container.innerHTML = orders.map(o => {
           const canNegotiate = ['quoted', 'negotiating'].includes(o.status);
           const canIssuePO = o.status === 'accepted';
           return `
