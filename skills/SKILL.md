@@ -89,6 +89,7 @@ Container body fabrication & fittings.
 - Read "Why Choose Us" feature highlights (quality, customization, experience, support)
 - Understand the business process (Browse → Inquire → Manufacture → Deliver)
 - Read customer testimonials
+- Click the "Give us a call" button in the top strip to call the sales team directly (+91 93863 91266)
 - Quick access to catalog, contact, and inquiry submission
 
 **Visual features:**
@@ -213,6 +214,7 @@ Container body fabrication & fittings.
 ## Interactive UX Features
 
 ### Navigation & Layout
+- Site-wide "Call Us" strip above the header with clickable tel: link for instant phone inquiry
 - Responsive navigation bar with mobile hamburger menu
 - Smooth scroll to sections from navigation links
 - Back-to-top floating button
