@@ -106,6 +106,46 @@
         <div class="dash-header">
           <h2>My Orders & Inquiries</h2>
         </div>
+        <div class="orders-toolbar" id="buyerOrdersToolbar">
+          <div class="filter-group">
+            <label for="buyerFilterDateFrom">From</label>
+            <input type="date" id="buyerFilterDateFrom">
+          </div>
+          <div class="filter-group">
+            <label for="buyerFilterDateTo">To</label>
+            <input type="date" id="buyerFilterDateTo">
+          </div>
+          <div class="filter-group">
+            <label for="buyerFilterStatus">Status</label>
+            <select id="buyerFilterStatus">
+              <option value="">All</option>
+              <option value="pending">Pending</option>
+              <option value="quoted">Quoted</option>
+              <option value="negotiating">Negotiating</option>
+              <option value="accepted">Accepted</option>
+              <option value="po_issued">PO Issued</option>
+              <option value="in-progress">In Progress</option>
+              <option value="invoiced">Invoiced</option>
+              <option value="dispatched">Dispatched</option>
+              <option value="delivered">Delivered</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="disputed">Disputed</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="buyerFilterType">Type</label>
+            <select id="buyerFilterType">
+              <option value="">All</option>
+              <option value="inquiry">Inquiry</option>
+              <option value="rfq">RFQ</option>
+            </select>
+          </div>
+          <div class="toolbar-actions">
+            <button class="btn btn-ghost btn-sm" id="buyerSortBtn" onclick="BuyerDash.toggleSort()">Newest First &#8595;</button>
+            <button class="btn btn-ghost btn-sm" onclick="BuyerDash.resetFilters()">Reset</button>
+          </div>
+        </div>
         <div id="buyerOrdersList"></div>
       </div>
 
@@ -380,21 +420,66 @@
         }).join('');
       },
 
+      _orders: [],
+      _sortNewest: true,
+
       async renderOrders() {
         const session = Auth.getSession();
         if (!session) return;
         let orders;
         try { orders = (await Cart.fetchOrders()) || Cart.getOrdersByBuyer(session.id); } catch { orders = Cart.getOrdersByBuyer(session.id); }
+        this._orders = orders;
+        this.applyOrderFilters();
+        // Attach filter listeners once
+        if (!this._filtersAttached) {
+          this._filtersAttached = true;
+          ['buyerFilterDateFrom','buyerFilterDateTo','buyerFilterStatus','buyerFilterType'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', () => this.applyOrderFilters());
+          });
+        }
+      },
+
+      applyOrderFilters() {
+        const dateFrom = document.getElementById('buyerFilterDateFrom')?.value;
+        const dateTo = document.getElementById('buyerFilterDateTo')?.value;
+        const status = document.getElementById('buyerFilterStatus')?.value;
+        const type = document.getElementById('buyerFilterType')?.value;
+
+        let filtered = [...this._orders];
+
+        if (dateFrom) {
+          const from = new Date(dateFrom);
+          filtered = filtered.filter(o => new Date(o.createdAt) >= from);
+        }
+        if (dateTo) {
+          const to = new Date(dateTo);
+          to.setHours(23, 59, 59, 999);
+          filtered = filtered.filter(o => new Date(o.createdAt) <= to);
+        }
+        if (status) {
+          filtered = filtered.filter(o => o.status === status);
+        }
+        if (type) {
+          filtered = filtered.filter(o => o.type === type);
+        }
+
+        filtered.sort((a, b) => {
+          const diff = new Date(b.createdAt) - new Date(a.createdAt);
+          return this._sortNewest ? diff : -diff;
+        });
+
         const container = document.getElementById('buyerOrdersList');
         if (!container) return;
 
-        if (orders.length === 0) {
-          container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128203;</div><h3>No orders yet</h3><p>Submit an inquiry or RFQ to see your orders here.</p></div>';
+        if (filtered.length === 0) {
+          container.innerHTML = this._orders.length === 0
+            ? '<div class="empty-state"><div class="empty-icon">&#128203;</div><h3>No orders yet</h3><p>Submit an inquiry or RFQ to see your orders here.</p></div>'
+            : '<div class="empty-state"><div class="empty-icon">&#128269;</div><h3>No orders match your filters</h3><p>Try adjusting the date range, status, or type filters.</p></div>';
           return;
         }
 
-        orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        container.innerHTML = orders.map(o => {
+        container.innerHTML = filtered.map(o => {
           const canNegotiate = ['quoted', 'negotiating'].includes(o.status);
           const canIssuePO = o.status === 'accepted';
           return `
@@ -427,6 +512,24 @@
             </div>
           </div>`;
         }).join('');
+      },
+
+      toggleSort() {
+        this._sortNewest = !this._sortNewest;
+        const btn = document.getElementById('buyerSortBtn');
+        if (btn) btn.innerHTML = this._sortNewest ? 'Newest First &#8595;' : 'Oldest First &#8593;';
+        this.applyOrderFilters();
+      },
+
+      resetFilters() {
+        document.getElementById('buyerFilterDateFrom').value = '';
+        document.getElementById('buyerFilterDateTo').value = '';
+        document.getElementById('buyerFilterStatus').value = '';
+        document.getElementById('buyerFilterType').value = '';
+        this._sortNewest = true;
+        const btn = document.getElementById('buyerSortBtn');
+        if (btn) btn.innerHTML = 'Newest First &#8595;';
+        this.applyOrderFilters();
       },
 
       async openOrderDetail(orderId) {

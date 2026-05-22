@@ -89,6 +89,46 @@
         <div class="dash-header">
           <h2>Orders & Inquiries</h2>
         </div>
+        <div class="orders-toolbar" id="supplierOrdersToolbar">
+          <div class="filter-group">
+            <label for="supFilterDateFrom">From</label>
+            <input type="date" id="supFilterDateFrom">
+          </div>
+          <div class="filter-group">
+            <label for="supFilterDateTo">To</label>
+            <input type="date" id="supFilterDateTo">
+          </div>
+          <div class="filter-group">
+            <label for="supFilterStatus">Status</label>
+            <select id="supFilterStatus">
+              <option value="">All</option>
+              <option value="pending">Pending</option>
+              <option value="quoted">Quoted</option>
+              <option value="negotiating">Negotiating</option>
+              <option value="accepted">Accepted</option>
+              <option value="po_issued">PO Issued</option>
+              <option value="in-progress">In Progress</option>
+              <option value="invoiced">Invoiced</option>
+              <option value="dispatched">Dispatched</option>
+              <option value="delivered">Delivered</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="disputed">Disputed</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="supFilterType">Type</label>
+            <select id="supFilterType">
+              <option value="">All</option>
+              <option value="inquiry">Inquiry</option>
+              <option value="rfq">RFQ</option>
+            </select>
+          </div>
+          <div class="toolbar-actions">
+            <button class="btn btn-ghost btn-sm" id="supSortBtn" onclick="SupplierDash.toggleSort()">Newest First &#8595;</button>
+            <button class="btn btn-ghost btn-sm" onclick="SupplierDash.resetFilters()">Reset</button>
+          </div>
+        </div>
         <div id="allOrders">
           <!-- Rendered by JS -->
         </div>
@@ -296,7 +336,7 @@
                   <td>${o.type === 'rfq' ? '<span class="badge badge-blue">RFQ</span>' : '<span class="badge badge-green">Inquiry</span>'}</td>
                   <td>${o.items.length} item(s)</td>
                   <td>${Cart.getStatusLabel(o.status)}</td>
-                  <td>${new Date(o.createdAt).toLocaleDateString()}</td>
+                  <td>${new Date(o.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</td>
                 </tr>
               `).join('')}</tbody>
             </table>`;
@@ -328,29 +368,97 @@
             </table>`;
       },
 
+      _orders: [],
+      _sortNewest: true,
+
       async renderOrders() {
         let orders;
         try { orders = (await Cart.fetchOrders()) || Cart.getOrders(); } catch { orders = Cart.getOrders(); }
-        document.getElementById('allOrders').innerHTML = orders.length === 0
-          ? '<div class="empty-state"><div class="empty-icon">&#128203;</div><h3>No orders</h3><p>Customer inquiries and orders will appear here.</p></div>'
-          : `<table class="data-table">
-              <thead><tr><th>Order ID</th><th>Buyer</th><th>Type</th><th>Items</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
-              <tbody>${orders.map(o => `
-                <tr class="clickable-row" onclick="SupplierDash.openOrderDetail('${o.id}')">
-                  <td><strong>${o.id}</strong></td>
-                  <td>${o.buyerName}</td>
-                  <td>${o.type === 'rfq' ? '<span class="badge badge-blue">RFQ</span>' : '<span class="badge badge-green">Inquiry</span>'}</td>
-                  <td>${o.items.map(i => i.name).join(', ')}</td>
-                  <td>${Cart.getStatusLabel(o.status)}</td>
-                  <td>${new Date(o.createdAt).toLocaleDateString()}</td>
-                  <td>
-                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();SupplierDash.openOrderDetail('${o.id}')">
-                      ${['pending','negotiating'].includes(o.status) ? 'Review &amp; Quote' : 'View Details'}
-                    </button>
-                  </td>
-                </tr>
-              `).join('')}</tbody>
-            </table>`;
+        this._orders = orders;
+        this.applyOrderFilters();
+        // Attach filter listeners once
+        if (!this._filtersAttached) {
+          this._filtersAttached = true;
+          ['supFilterDateFrom','supFilterDateTo','supFilterStatus','supFilterType'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', () => this.applyOrderFilters());
+          });
+        }
+      },
+
+      applyOrderFilters() {
+        const dateFrom = document.getElementById('supFilterDateFrom')?.value;
+        const dateTo = document.getElementById('supFilterDateTo')?.value;
+        const status = document.getElementById('supFilterStatus')?.value;
+        const type = document.getElementById('supFilterType')?.value;
+
+        let filtered = [...this._orders];
+
+        if (dateFrom) {
+          const from = new Date(dateFrom);
+          filtered = filtered.filter(o => new Date(o.createdAt) >= from);
+        }
+        if (dateTo) {
+          const to = new Date(dateTo);
+          to.setHours(23, 59, 59, 999);
+          filtered = filtered.filter(o => new Date(o.createdAt) <= to);
+        }
+        if (status) {
+          filtered = filtered.filter(o => o.status === status);
+        }
+        if (type) {
+          filtered = filtered.filter(o => o.type === type);
+        }
+
+        filtered.sort((a, b) => {
+          const diff = new Date(b.createdAt) - new Date(a.createdAt);
+          return this._sortNewest ? diff : -diff;
+        });
+
+        const container = document.getElementById('allOrders');
+        if (filtered.length === 0) {
+          container.innerHTML = this._orders.length === 0
+            ? '<div class="empty-state"><div class="empty-icon">&#128203;</div><h3>No orders</h3><p>Customer inquiries and orders will appear here.</p></div>'
+            : '<div class="empty-state"><div class="empty-icon">&#128269;</div><h3>No orders match your filters</h3><p>Try adjusting the date range, status, or type filters.</p></div>';
+          return;
+        }
+
+        container.innerHTML = `<table class="data-table">
+          <thead><tr><th>Order ID</th><th>Buyer</th><th>Type</th><th>Items</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+          <tbody>${filtered.map(o => `
+            <tr class="clickable-row" onclick="SupplierDash.openOrderDetail('${o.id}')">
+              <td><strong>${o.id}</strong></td>
+              <td>${o.buyerName}</td>
+              <td>${o.type === 'rfq' ? '<span class="badge badge-blue">RFQ</span>' : '<span class="badge badge-green">Inquiry</span>'}</td>
+              <td>${o.items.map(i => i.name).join(', ')}</td>
+              <td>${Cart.getStatusLabel(o.status)}</td>
+              <td>${new Date(o.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</td>
+              <td>
+                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();SupplierDash.openOrderDetail('${o.id}')">
+                  ${['pending','negotiating'].includes(o.status) ? 'Review &amp; Quote' : 'View Details'}
+                </button>
+              </td>
+            </tr>
+          `).join('')}</tbody>
+        </table>`;
+      },
+
+      toggleSort() {
+        this._sortNewest = !this._sortNewest;
+        const btn = document.getElementById('supSortBtn');
+        if (btn) btn.innerHTML = this._sortNewest ? 'Newest First &#8595;' : 'Oldest First &#8593;';
+        this.applyOrderFilters();
+      },
+
+      resetFilters() {
+        document.getElementById('supFilterDateFrom').value = '';
+        document.getElementById('supFilterDateTo').value = '';
+        document.getElementById('supFilterStatus').value = '';
+        document.getElementById('supFilterType').value = '';
+        this._sortNewest = true;
+        const btn = document.getElementById('supSortBtn');
+        if (btn) btn.innerHTML = 'Newest First &#8595;';
+        this.applyOrderFilters();
       },
 
       async openOrderDetail(orderId) {

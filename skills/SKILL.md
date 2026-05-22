@@ -175,6 +175,13 @@ Container body fabrication & fittings.
 - Record Goods Receipt (GRN) with date, condition, and remarks (status: dispatched → delivered)
 - Perform quality inspection and approve/reject received goods (status: delivered → qc_approved / disputed)
 - Release balance payment after QC approval; balance auto-calculated as (PO Total - Advance Paid) (status: qc_approved → completed)
+- **Filter orders by date range** (From / To date pickers) to narrow down to a specific period
+- **Filter orders by status** (Pending, Quoted, Negotiating, Accepted, PO Issued, In Progress, Invoiced, Dispatched, Delivered, Completed, Cancelled, Disputed)
+- **Filter orders by type** (Inquiry or RFQ)
+- **Sort orders** by date — toggle between Newest First and Oldest First
+- **Combine multiple filters** (date range + status + type) to find specific orders
+- **Reset all filters** to restore the full order list
+- See "No orders match your filters" message when filter combination yields no results
 
 ### 6. Supplier Dashboard (`pages/supplier.html`)
 
@@ -192,6 +199,14 @@ Container body fabrication & fittings.
 - View buyer's GRN acknowledgment and QC inspection results
 - Track payment status (advance received, balance pending/received)
 - Respond to disputes raised by buyer after QC rejection
+- **View order timestamps** with date and time (e.g. "22 May 2026, 2:35 pm") in both Overview recent orders and full Orders table
+- **Filter orders by date range** (From / To date pickers) to narrow down to a specific period
+- **Filter orders by status** (Pending, Quoted, Negotiating, Accepted, PO Issued, In Progress, Invoiced, Dispatched, Delivered, Completed, Cancelled, Disputed)
+- **Filter orders by type** (Inquiry or RFQ)
+- **Sort orders** by date — toggle between Newest First and Oldest First
+- **Combine multiple filters** (date range + status + type) to find specific orders
+- **Reset all filters** to restore the full order list
+- See "No orders match your filters" message when filter combination yields no results
 
 ---
 
@@ -216,6 +231,18 @@ Container body fabrication & fittings.
 - **Dark/Light mode toggle** with localStorage persistence across sessions
 - Responsive design for all screen sizes (mobile-first, 375px+)
 - High-contrast text on image overlays via gradient backgrounds
+
+### Orders Filtering, Sorting & Timestamps
+- **Orders toolbar** on both Supplier and Buyer dashboards with date range, status, type filters, sort toggle, and reset
+- **Date range filter**: From / To date pickers filter orders by `createdAt` timestamp
+- **Status filter**: Dropdown with all 13 order statuses (Pending through Disputed)
+- **Type filter**: Filter by Inquiry or RFQ
+- **Sort toggle**: Switch between Newest First (default) and Oldest First
+- **Reset button**: Clears all filters and restores full order list
+- **Combined filters**: All filters work together (intersection logic)
+- **Empty state**: Shows "No orders match your filters" when no results
+- **Timestamps with time**: Supplier orders table and overview recent orders display full date + time (e.g. "22 May 2026, 2:35 pm") using `toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })`
+- Orders are cached client-side (`_orders`) after fetch; filtering/sorting operates on the cached copy without re-fetching
 
 ### User Feedback
 - Toast notifications for all user actions (add to cart, submit inquiry, login, etc.)
