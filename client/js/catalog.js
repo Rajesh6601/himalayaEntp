@@ -413,8 +413,8 @@ const Catalog = {
         <div class="product-card-actions">
           <button class="btn btn-outline btn-sm" onclick="Catalog.showProductDetail('${product.id}')">View Details</button>
           ${session && session.role === 'buyer'
-            ? `<button class="btn btn-primary btn-sm" onclick="Cart.addItem('${product.id}')">Add to Inquiry</button>`
-            : `<button class="btn btn-primary btn-sm" onclick="Auth.showLoginModal()">Request Quote</button>`
+            ? `<button class="btn btn-primary btn-sm" onclick="Cart.addItem('${product.id}')">Request Quote</button>`
+            : `<button class="btn btn-primary btn-sm" onclick="Auth.showLoginModal('register')">Request Quote</button>`
           }
         </div>
       </div>
@@ -452,9 +452,9 @@ const Catalog = {
       </div>
       <div style="display:flex;gap:12px;">
         ${session && session.role === 'buyer'
-          ? `<button class="btn btn-primary" onclick="Cart.addItem('${p.id}');App.closeModal('productModal');">Add to Inquiry</button>
+          ? `<button class="btn btn-primary" onclick="Cart.addItem('${p.id}');App.closeModal('productModal');">Request Quote</button>
              <button class="btn btn-outline" onclick="Cart.addItem('${p.id}');App.closeModal('productModal');Cart.openCart();">Request Quote Now</button>`
-          : `<button class="btn btn-primary" onclick="App.closeModal('productModal');Auth.showLoginModal();">Login to Inquire</button>`
+          : `<button class="btn btn-primary" onclick="App.closeModal('productModal');Auth.showLoginModal('register');">Login to Inquire</button>`
         }
       </div>
     `;

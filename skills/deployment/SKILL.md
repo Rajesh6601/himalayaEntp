@@ -257,6 +257,16 @@ sshpass -p '<VPS_PASSWORD>' ssh -o StrictHostKeyChecking=no -o PreferredAuthenti
 
 ---
 
+## Guest-to-Registration Flow
+
+When a guest user clicks **"Request Quote"** (product card) or **"Login to Inquire"** (product detail modal), the login modal opens directly on the **Register** tab with a helper message: *"Create a free account to request quotes and track your orders."* This reduces friction for new users who don't yet have an account.
+
+- `Auth.showLoginModal('register')` — opens modal on the Register tab
+- `Auth.showLoginModal()` — opens modal on the Login tab (default, used by nav Login button and cart re-auth flows)
+- The helper message is injected dynamically by `switchLoginTab()` and removed when switching back to Login
+
+---
+
 ## Common Issues
 
 **"Container name already in use"** — A previous container wasn't removed. Run `docker rm -f himalaya-entp-db himalaya-entp-api himalaya-entp-frontend himalaya-entp-pgadmin` then retry.

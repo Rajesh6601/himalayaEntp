@@ -129,8 +129,11 @@ const Auth = {
     }
   },
 
-  showLoginModal() {
+  showLoginModal(tab) {
     App.openModal('loginModal');
+    if (tab === 'register') {
+      this.switchLoginTab('register');
+    }
   },
 
   async handleLogin(e) {
@@ -146,11 +149,15 @@ const Auth = {
       App.closeModal('loginModal');
       App.showToast(`Welcome back, ${result.user.name}!`, 'success');
       const base = window.location.pathname.includes('/pages/') ? '' : 'pages/';
-      setTimeout(() => {
-        if (result.user.role === 'supplier') {
-          window.location.href = base + 'supplier.html';
+      if (result.user.role === 'supplier') {
+        setTimeout(() => { window.location.href = base + 'supplier.html'; }, 500);
+      } else {
+        // Re-render catalog so product cards reflect logged-in buyer state
+        if (typeof Catalog !== 'undefined') {
+          Catalog.renderHomeProducts();
+          Catalog.renderCatalogPage();
         }
-      }, 500);
+      }
     } else {
       App.showToast(result.message, 'error');
     }
@@ -171,8 +178,22 @@ const Auth = {
     }
     const result = await this.register(name, email, password);
     if (result.success) {
-      App.closeModal('loginModal');
-      App.showToast(`Welcome, ${result.user.name}! Account created.`, 'success');
+      // Clear auto-login session so user logs in explicitly
+      localStorage.removeItem(this.SESSION_KEY);
+      API.setToken(null);
+      this.updateUI();
+
+      // Switch to Login tab and pre-fill email
+      this.switchLoginTab('login');
+      const loginEmail = document.getElementById('loginEmail');
+      if (loginEmail) loginEmail.value = email;
+
+      // Clear register form
+      document.getElementById('regName').value = '';
+      document.getElementById('regEmail').value = '';
+      document.getElementById('regPassword').value = '';
+
+      App.showToast('Account created successfully! Please login.', 'success');
     } else {
       App.showToast(result.message, 'error');
     }
@@ -183,6 +204,21 @@ const Auth = {
     document.querySelectorAll('.login-form').forEach(f => f.style.display = 'none');
     document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
     document.getElementById(tab === 'login' ? 'loginForm' : 'registerForm').style.display = 'block';
+
+    // Show/remove helper message on the register form
+    const existing = document.getElementById('registerHelperMsg');
+    if (tab === 'register') {
+      if (!existing) {
+        const msg = document.createElement('p');
+        msg.id = 'registerHelperMsg';
+        msg.style.cssText = 'background:var(--primary-light,#e8f4fd);color:var(--primary,#1a73e8);padding:10px 14px;border-radius:var(--radius-sm,6px);font-size:0.88rem;margin-bottom:12px;';
+        msg.textContent = 'Create a free account to request quotes and track your orders.';
+        const form = document.getElementById('registerForm');
+        if (form) form.insertBefore(msg, form.firstChild);
+      }
+    } else if (existing) {
+      existing.remove();
+    }
   },
 
   requireAuth(role) {
