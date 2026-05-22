@@ -591,7 +591,7 @@
           ${canCreateInvoice ? `
           <div class="action-panel" style="margin-top:12px;">
             <h4 style="font-size:0.9rem;margin-bottom:12px;">Create Invoice</h4>
-            <p style="font-size:0.83rem;color:var(--text-light);margin-bottom:10px;">Invoice will be generated against PO value: <strong>${App.formatCurrency(order.totalValue || order.latestQuote || 0)}</strong></p>
+            <p style="font-size:0.83rem;color:var(--text-light);margin-bottom:10px;">Invoice will be generated against PO value: <strong>${App.formatCurrency(order.totalValue || order.latestQuote || 0)}</strong> (+ 18% GST = <strong>${App.formatCurrency(Math.round((order.totalValue || order.latestQuote || 0) * 1.18 * 100) / 100)}</strong>)</p>
             <form onsubmit="SupplierDash.createInvoice(event, '${orderId}')">
               <div class="form-row">
                 <div class="form-group">
@@ -656,7 +656,9 @@
           ${poStatuses.includes(order.status) ? `
           <div class="action-panel" style="margin-top:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <p style="font-size:0.9rem;"><strong>Purchase Order Value:</strong> ${App.formatCurrency(order.totalValue || order.latestQuote || 0)}</p>
+              <div>
+                <p style="font-size:0.9rem;"><strong>Purchase Order Value:</strong> ${App.formatCurrency(order.totalValue || order.latestQuote || 0)} + 18% GST = <strong>${App.formatCurrency(Math.round((order.totalValue || order.latestQuote || 0) * 1.18 * 100) / 100)}</strong></p>
+              </div>
               <button class="btn btn-primary btn-sm" onclick="SupplierDash.downloadPO('${orderId}')">&#128196; Download PO</button>
             </div>
           </div>` : ''}
@@ -793,9 +795,10 @@
         await this.renderOverview();
       },
 
-      async downloadPO(orderId) {
+      async downloadPO(orderId, placeOfSupply) {
         try {
-          const res = await fetch(API.BASE + '/orders/' + orderId + '/po', {
+          const pos = placeOfSupply || 'Bihar';
+          const res = await fetch(API.BASE + '/orders/' + orderId + '/po?place_of_supply=' + encodeURIComponent(pos), {
             headers: { 'Authorization': 'Bearer ' + API.token }
           });
           if (!res.ok) {

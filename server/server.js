@@ -3,6 +3,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const PDFDocument = require('pdfkit');
+const nodemailer = require('nodemailer');
 const db = require('./db/connection');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDoc = require('./swagger.json');
@@ -13,6 +14,18 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change-me';
 
 app.use(cors());
 app.use(express.json());
+
+// ── Email Transporter ──
+const smtpTransporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.rediffmail.com',
+  port: parseInt(process.env.SMTP_PORT || '465', 10),
+  secure: (process.env.SMTP_SECURE || 'true') === 'true',
+  auth: {
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+  },
+});
+const CONTACT_TO_EMAIL = process.env.CONTACT_TO_EMAIL || 'himalaya_enterprises@rediffmail.com';
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc, { customSiteTitle: 'Himalaya API Docs' }));
 
 // ── Auth Middleware ──
@@ -370,6 +383,22 @@ app.get('/api/orders/:id/po', authenticate, async (req, res) => {
     );
     const agreedTotal = priceResult.rows.length > 0 ? Number(priceResult.rows[0].quoted_price) : Number(order.total_value || 0);
 
+    // 5b. Calculate GST (same logic as invoice creation)
+    const placeOfSupply = req.query.place_of_supply || 'Bihar';
+    let poCgstRate = 0, poSgstRate = 0, poIgstRate = 0;
+    if (placeOfSupply === 'Bihar') {
+      poCgstRate = 9;
+      poSgstRate = 9;
+    } else {
+      poIgstRate = 18;
+    }
+    const poSubtotal = agreedTotal;
+    const poCgstAmt = Math.round(poSubtotal * poCgstRate / 100 * 100) / 100;
+    const poSgstAmt = Math.round(poSubtotal * poSgstRate / 100 * 100) / 100;
+    const poIgstAmt = Math.round(poSubtotal * poIgstRate / 100 * 100) / 100;
+    const poTotalTax = poCgstAmt + poSgstAmt + poIgstAmt;
+    const poGrandTotal = poSubtotal + poTotalTax;
+
     // 6. Fetch delivery estimate
     const deliveryResult = await db.query(
       `SELECT delivery_estimate FROM order_messages WHERE order_id = $1 AND delivery_estimate IS NOT NULL ORDER BY created_at DESC LIMIT 1`,
@@ -438,7 +467,7 @@ app.get('/api/orders/:id/po', authenticate, async (req, res) => {
     y += 18;
     doc.fontSize(9).font('Helvetica').fillColor('#333333');
     const orderType = order.type === 'rfq' ? 'RFQ' : 'Inquiry';
-    doc.text(`Order Type: ${orderType}    |    Delivery: ${deliveryEstimate}`, leftCol, y);
+    doc.text(`Order Type: ${orderType}    |    Delivery: ${deliveryEstimate}    |    Place of Supply: ${placeOfSupply}`, leftCol, y);
     if (order.notes) {
       y += 14;
       doc.text(`Notes: ${order.notes.substring(0, 200)}`, leftCol, y, { width: pageWidth });
@@ -509,13 +538,47 @@ app.get('/api/orders/:id/po', authenticate, async (req, res) => {
     // Table bottom border
     doc.moveTo(tableX, y).lineTo(tableX + tableWidth, y).lineWidth(0.5).stroke('#cccccc');
 
-    // Agreed total
+    // ── Tax Summary ──
     y += 10;
-    doc.fontSize(10).font('Helvetica-Bold').fillColor('#000000');
-    doc.text(`Agreed Total: ${formatINR(agreedTotal)}`, tableX + tableWidth - 200, y, { width: 200, align: 'right' });
+    const poRightAlign = tableX + tableWidth - 200;
+    doc.fontSize(9).font('Helvetica').fillColor('#333333');
+    doc.text('Subtotal:', poRightAlign, y, { width: 100 });
+    doc.text(formatINR(poSubtotal), poRightAlign + 100, y, { width: 100, align: 'right' });
+
+    if (poCgstRate > 0) {
+      y += 14;
+      doc.text(`CGST @${poCgstRate}%:`, poRightAlign, y, { width: 100 });
+      doc.text(formatINR(poCgstAmt), poRightAlign + 100, y, { width: 100, align: 'right' });
+    }
+    if (poSgstRate > 0) {
+      y += 14;
+      doc.text(`SGST @${poSgstRate}%:`, poRightAlign, y, { width: 100 });
+      doc.text(formatINR(poSgstAmt), poRightAlign + 100, y, { width: 100, align: 'right' });
+    }
+    if (poIgstRate > 0) {
+      y += 14;
+      doc.text(`IGST @${poIgstRate}%:`, poRightAlign, y, { width: 100 });
+      doc.text(formatINR(poIgstAmt), poRightAlign + 100, y, { width: 100, align: 'right' });
+    }
+
+    y += 14;
+    doc.text('Total Tax:', poRightAlign, y, { width: 100 });
+    doc.text(formatINR(poTotalTax), poRightAlign + 100, y, { width: 100, align: 'right' });
+
+    y += 18;
+    doc.fontSize(11).font('Helvetica-Bold').fillColor('#000000');
+    doc.text('GRAND TOTAL:', poRightAlign, y, { width: 100 });
+    doc.text(formatINR(poGrandTotal), poRightAlign + 100, y, { width: 100, align: 'right' });
+
+    // ── Amount in Words ──
+    y += 20;
+    doc.moveTo(leftCol, y).lineTo(leftCol + pageWidth, y).lineWidth(0.5).stroke('#333333');
+    y += 8;
+    doc.fontSize(9).font('Helvetica').fillColor('#333333');
+    doc.text(`Amount in Words: ${numberToWordsINR(poGrandTotal)}`, leftCol, y, { width: pageWidth });
 
     // Divider
-    y += 25;
+    y += 20;
     doc.moveTo(leftCol, y).lineTo(leftCol + pageWidth, y).lineWidth(0.5).stroke('#333333');
 
     // ── Terms & Conditions ──
@@ -526,7 +589,7 @@ app.get('/api/orders/:id/po', authenticate, async (req, res) => {
     const terms = [
       'Payment: 50% advance, 50% on delivery',
       'Warranty: 12 months against manufacturing defects',
-      'Prices inclusive of fabrication; transport extra',
+      'Prices inclusive of fabrication and applicable GST; transport extra',
       'Delivery subject to material availability',
       'Disputes subject to Patna jurisdiction',
       'PO valid for 30 days from date of issue'
@@ -1016,7 +1079,7 @@ app.get('/api/orders/:id/invoice', authenticate, async (req, res) => {
     // ── Order Reference ──
     y += 10;
     doc.fontSize(9).font('Helvetica').fillColor('#333333');
-    doc.text(`Order Ref: ${order.id}  |  Place of Supply: ${invoice.place_of_supply || 'Bihar'}  |  HSN: ${invoice.hsn_code || '8707'}`, leftCol, y);
+    doc.text(`PO Number: ${order.id}  |  Order Ref: ${order.id}  |  Place of Supply: ${invoice.place_of_supply || 'Bihar'}  |  HSN: ${invoice.hsn_code || '8707'}`, leftCol, y);
 
     // Divider
     y += 18;
@@ -1231,6 +1294,31 @@ app.post('/api/contact', async (req, res) => {
       'INSERT INTO contact_inquiries (name, email, phone, product_interest, message) VALUES ($1,$2,$3,$4,$5)',
       [name, email, phone, product_interest, message]
     );
+
+    // Send email notification
+    if (process.env.SMTP_USER) {
+      const mailOptions = {
+        from: `"Himalaya Enterprises Website" <${process.env.SMTP_USER}>`,
+        replyTo: email,
+        to: CONTACT_TO_EMAIL,
+        subject: `New Inquiry from ${name} — ${product_interest || 'General'}`,
+        html: `
+          <h2>New Contact Inquiry</h2>
+          <table style="border-collapse:collapse;width:100%;max-width:600px;">
+            <tr><td style="padding:8px;font-weight:bold;border:1px solid #ddd;">Name</td><td style="padding:8px;border:1px solid #ddd;">${name}</td></tr>
+            <tr><td style="padding:8px;font-weight:bold;border:1px solid #ddd;">Email</td><td style="padding:8px;border:1px solid #ddd;"><a href="mailto:${email}">${email}</a></td></tr>
+            <tr><td style="padding:8px;font-weight:bold;border:1px solid #ddd;">Phone</td><td style="padding:8px;border:1px solid #ddd;"><a href="tel:${phone}">${phone}</a></td></tr>
+            <tr><td style="padding:8px;font-weight:bold;border:1px solid #ddd;">Product Interest</td><td style="padding:8px;border:1px solid #ddd;">${product_interest || '—'}</td></tr>
+            <tr><td style="padding:8px;font-weight:bold;border:1px solid #ddd;">Message</td><td style="padding:8px;border:1px solid #ddd;">${message}</td></tr>
+          </table>
+          <p style="margin-top:16px;color:#888;font-size:12px;">Sent from the Himalaya Enterprises contact form</p>
+        `,
+      };
+      smtpTransporter.sendMail(mailOptions).catch(err => {
+        console.error('Email send failed:', err.message);
+      });
+    }
+
     res.status(201).json({ message: 'Inquiry submitted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
